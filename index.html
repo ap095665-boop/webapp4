@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simple Shop Manager</title>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E7C55">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Shop Manager">
+<style>
+  :root{
+    --bg:#EEF2EF;
+    --surface:#FFFFFF;
+    --surface-alt:#F5F8F6;
+    --ink:#16241D;
+    --ink-soft:#5B6A61;
+    --ink-faint:#8B978F;
+    --primary:#0E7C55;
+    --primary-dark:#0A5F41;
+    --primary-tint:#E3F3EB;
+    --amber:#C97F1F;
+    --amber-tint:#FBEEDB;
+    --danger:#BB3E33;
+    --danger-tint:#F9E7E4;
+    --violet:#6B4FA0;
+    --violet-tint:#EDE7F6;
+    --border:#DEE6E1;
+    --shadow:0 2px 10px rgba(19,32,25,0.07);
+    --shadow-lg:0 12px 32px rgba(19,32,25,0.18);
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;overflow-x:hidden;width:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:76px;
+  }
+  button{font-family:inherit;}
+  h1,h2,h3,p{margin:0;}
+  .hidden{display:none !important;}
+
+  /* App bar */
+  .appbar{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px 14px;
+    background:var(--bg);
+    gap:10px;
+  }
+  .store-name-btn{
+    font-size:19px;font-weight:800;letter-spacing:-0.01em;color:var(--ink);
+    background:none;border:none;padding:0;text-align:left;
+    display:flex;align-items:center;gap:5px;
+    flex:1 1 auto;min-width:0;
+    overflow:hidden;
+  }
+  .store-name-btn span.name-text{
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .store-name-btn .link-hint{font-size:12px;opacity:.55;flex-shrink:0;}
+  .store-name-btn:active{opacity:.7;}
+  .appbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+  .icon-btn{
+    width:42px;height:42px;border-radius:50%;
+    border:1px solid var(--border);background:var(--surface);
+    font-size:18px;display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow);
+    transition:transform .12s ease;
+  }
+  .icon-btn:active{transform:scale(0.92);}
+
+  main{padding:0 14px;max-width:480px;margin:0 auto;}
+
+  /* Reminder banner */
+  .reminder-card{
+    background:var(--danger-tint);
+    border:1px solid #EBC2BC;
+    border-radius:var(--radius-md);
+    padding:12px 14px;margin-bottom:10px;
+    animation:slideDown .25s ease;
+  }
+  .reminder-card .rtitle{font-weight:700;font-size:13px;color:var(--danger);letter-spacing:.03em;text-transform:uppercase;}
+  .reminder-card .rnote{font-size:16px;font-weight:700;margin:4px 0 2px;}
+  .reminder-card .rdue{font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .reminder-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .reminder-actions button{
+    flex:1;min-width:64px;padding:8px 4px;border-radius:8px;border:none;
+    background:var(--surface);font-size:12px;font-weight:700;color:var(--ink);
+    box-shadow:var(--shadow);
+  }
+  .reminder-actions button.done-btn{background:var(--primary);color:#fff;}
+
+  /* Cards */
+  .card{
+    background:var(--surface);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:18px;margin-bottom:14px;
+  }
+  .revenue-card{
+    background:linear-gradient(155deg,var(--primary) 0%, var(--primary-dark) 100%);
+    color:#fff;padding:20px 20px 18px;
+  }
+  .revenue-card .label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;}
+  .revenue-card .amount{
+    font-size:40px;font-weight:800;letter-spacing:-0.02em;margin:4px 0 14px;
+    font-variant-numeric:tabular-nums;
+  }
+  .revenue-stats{display:flex;gap:10px;}
+  .revenue-stats .stat{
+    flex:1;background:rgba(255,255,255,0.14);border-radius:var(--radius-sm);
+    padding:9px 10px;
+  }
+  .revenue-stats .stat .n{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .revenue-stats .stat .l{font-size:11px;opacity:.85;margin-top:1px;}
+
+  /* Sales entry */
+  .entry-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .entry-head h3{font-size:14px;font-weight:800;color:var(--ink-soft);letter-spacing:.03em;text-transform:uppercase;}
+  .calc-btn{
+    border:1px solid var(--border);background:var(--surface-alt);
+    border-radius:10px;padding:7px 12px;font-size:13px;font-weight:700;
+    display:flex;align-items:center;gap:5px;
+  }
+  .calc-btn:active{transform:scale(0.95);}
+
+  .amount-display{
+    text-align:right;position:relative;
+    background:var(--surface-alt);
+    border-radius:var(--radius-md);
+    border:1.5px dashed var(--border);
+    padding:20px 18px;margin-bottom:12px;
+    overflow:hidden;
+  }
+  .amount-display .amt{
+    font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;
+    letter-spacing:-0.01em;color:var(--ink);word-break:break-all;
+  }
+  .recorded-flash{
+    position:absolute;inset:0;background:var(--primary);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:800;
+    transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.3,1);
+  }
+  .recorded-flash.show{transform:translateY(0);}
+
+  .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px;}
+  .numpad button{
+    height:58px;border-radius:var(--radius-md);border:1px solid var(--border);
+    background:var(--surface-alt);font-size:22px;font-weight:700;color:var(--ink);
+    transition:transform .1s ease, background .15s ease;
+  }
+  .numpad button:active{transform:scale(0.93);background:var(--border);}
+  .numpad button.op{background:var(--surface);color:var(--danger);font-size:18px;font-weight:800;}
+  .ok-btn{
+    width:100%;padding:17px;border:none;border-radius:var(--radius-md);
+    background:var(--primary);color:#fff;font-size:17px;font-weight:800;
+    letter-spacing:.02em;box-shadow:0 8px 18px rgba(14,124,85,0.35);
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  .ok-btn:active{transform:scale(0.97);}
+  .ok-btn:disabled{opacity:.6;}
+
+  .action-row{display:flex;gap:10px;margin-top:12px;}
+  .secondary-btn{
+    flex:1;padding:13px 8px;border-radius:var(--radius-md);border:1px solid var(--border);
+    background:var(--surface);font-size:13.5px;font-weight:700;color:var(--ink);
+    box-shadow:var(--shadow);
+  }
+  .secondary-btn:active{transform:scale(0.97);}
+
+  /* Section headers */
+  .section-title{
+    font-size:15px;font-weight:800;margin:4px 0 10px;display:flex;align-items:center;gap:6px;
+  }
+
+  /* Period tabs */
+  .segmented{
+    display:flex;background:var(--surface-alt);border-radius:12px;padding:4px;margin-bottom:14px;
+    border:1px solid var(--border);
+  }
+  .segmented button{
+    flex:1;padding:9px 4px;border:none;background:transparent;border-radius:9px;
+    font-size:12.5px;font-weight:700;color:var(--ink-soft);
+  }
+  .segmented button.active{background:var(--primary);color:#fff;}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  .stat-tile{background:var(--surface-alt);border-radius:var(--radius-md);padding:14px;}
+  .stat-tile .v{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .stat-tile .k{font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
+  .stat-tile.wide{grid-column:1/-1;}
+
+  .compare-box{background:var(--amber-tint);border-radius:var(--radius-md);padding:14px;margin-top:4px;}
+  .compare-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+  .compare-row .l{color:var(--ink-soft);font-weight:600;}
+  .compare-row .v{font-weight:800;}
+  .compare-row.hl{border-top:1px dashed #E0BE86;margin-top:4px;padding-top:8px;}
+  .pct-up{color:var(--primary);}
+  .pct-down{color:var(--danger);}
+
+  .date-row{display:flex;gap:10px;margin-bottom:12px;}
+  .date-field{flex:1;}
+  .date-field label{font-size:11.5px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:4px;}
+  .date-field input{
+    width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);
+    font-size:13.5px;background:var(--surface-alt);color:var(--ink);
+  }
+
+  /* Lists */
+  .txn-item, .stock-item, .note-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:13px 4px;border-bottom:1px solid var(--border);
+  }
+  .txn-item:last-child, .stock-item:last-child, .note-item:last-child{border-bottom:none;}
+  .txn-left .hash{font-size:11px;color:var(--ink-faint);font-weight:700;}
+  .txn-left .amt{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .txn-right{text-align:right;}
+  .txn-right .time{font-size:12px;color:var(--ink-soft);margin-bottom:6px;}
+  .mini-actions{display:flex;gap:6px;}
+  .mini-btn{
+    padding:6px 11px;border-radius:8px;border:1px solid var(--border);
+    background:var(--surface-alt);font-size:12px;font-weight:700;color:var(--ink);
+  }
+  .mini-btn.danger{color:var(--danger);border-color:#EBC2BC;background:var(--danger-tint);}
+  .mini-btn:active{transform:scale(0.94);}
+
+  .empty-state{text-align:center;padding:30px 10px;color:var(--ink-faint);font-size:13.5px;}
+
+  /* Stock card layout */
+  .stock-item{align-items:flex-start;flex-direction:column;gap:8px;}
+  .stock-top{display:flex;justify-content:space-between;width:100%;}
+  .stock-name{font-size:15.5px;font-weight:800;}
+  .stock-amt{font-size:16px;font-weight:800;color:var(--amber);font-variant-numeric:tabular-nums;}
+  .stock-meta{font-size:12px;color:var(--ink-soft);}
+  .stock-bottom{display:flex;justify-content:space-between;width:100%;align-items:center;}
+
+  /* Udhaar (credit) */
+  .customer-item{cursor:pointer;}
+  .customer-left .cname{font-size:15.5px;font-weight:800;}
+  .customer-left .cphone{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .customer-right .cbal{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .customer-right .cbal.zero{color:var(--ink-faint);}
+  .customer-right .cbal.owed{color:var(--violet);}
+  .customer-right .clabel{font-size:11px;color:var(--ink-soft);text-align:right;margin-top:2px;}
+  .udhaar-total-card{background:linear-gradient(155deg,var(--violet) 0%, #4E3A79 100%);color:#fff;}
+  .udhaar-total-card .label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;}
+  .udhaar-total-card .amount{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin:4px 0 2px;font-variant-numeric:tabular-nums;}
+  .udhaar-total-card .sub{font-size:12px;opacity:.85;}
+  .detail-balance{
+    text-align:center;background:var(--violet-tint);border-radius:var(--radius-md);
+    padding:16px;margin-bottom:14px;
+  }
+  .detail-balance .v{font-size:30px;font-weight:800;color:var(--violet);font-variant-numeric:tabular-nums;}
+  .detail-balance .k{font-size:12px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
+  .detail-actions{display:flex;gap:8px;margin-bottom:14px;}
+  .detail-actions button{flex:1;padding:12px 4px;border-radius:12px;border:none;font-size:13px;font-weight:800;}
+  .credit-btn{background:var(--violet);color:#fff;}
+  .payment-btn{background:var(--primary);color:#fff;}
+  .whatsapp-btn{
+    width:100%;padding:12px;border-radius:12px;border:1px solid #BFE3C9;background:#E7F7EC;
+    color:#1E8E3E;font-size:13.5px;font-weight:800;margin-bottom:14px;display:flex;
+    align-items:center;justify-content:center;gap:6px;
+  }
+  .entry-row{display:flex;justify-content:space-between;align-items:center;padding:10px 2px;border-bottom:1px solid var(--border);}
+  .entry-row:last-child{border-bottom:none;}
+  .entry-left .etype{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+  .entry-left .etype.credit{color:var(--violet);}
+  .entry-left .etype.payment{color:var(--primary);}
+  .entry-left .etime{font-size:11.5px;color:var(--ink-soft);margin-top:1px;}
+  .entry-right .eamt{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .entry-del{margin-left:8px;}
+
+  /* Notes */
+  .note-item{flex-direction:column;align-items:stretch;gap:6px;}
+  .note-title{font-size:15.5px;font-weight:800;}
+  .note-title.done{text-decoration:line-through;color:var(--ink-faint);}
+  .note-details{font-size:13px;color:var(--ink-soft);}
+  .note-meta{font-size:11.5px;color:var(--ink-faint);}
+  .note-reminder-badge{
+    display:inline-block;background:var(--danger-tint);color:var(--danger);
+    font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px;margin-top:2px;
+  }
+  .note-actions{display:flex;gap:6px;margin-top:4px;}
+
+  /* Buttons full */
+  .full-btn{
+    width:100%;padding:14px;border-radius:var(--radius-md);border:none;
+    background:var(--primary);color:#fff;font-size:15px;font-weight:800;
+    box-shadow:0 6px 16px rgba(14,124,85,0.3);margin-bottom:14px;
+  }
+  .full-btn.amber{background:var(--amber);box-shadow:0 6px 16px rgba(201,127,31,0.3);}
+  .full-btn:active{transform:scale(0.98);}
+  .full-btn.outline{
+    background:var(--surface);color:var(--ink);border:1px solid var(--border);
+    box-shadow:var(--shadow);
+  }
+
+  /* Bottom nav */
+  .bottomnav{
+    position:fixed;bottom:0;left:0;right:0;z-index:30;
+    display:flex;background:var(--surface);
+    border-top:1px solid var(--border);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 16px rgba(19,32,25,0.06);
+  }
+  .navbtn{
+    flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;
+    gap:2px;padding:6px 2px;border-radius:12px;color:var(--ink-faint);
+  }
+  .navbtn .ic{font-size:20px;}
+  .navbtn span{font-size:10.5px;font-weight:700;}
+  .navbtn.active{color:var(--primary);}
+
+  /* Modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(15,25,20,0.45);
+    display:flex;align-items:flex-end;justify-content:center;z-index:100;
+  }
+  .modal-sheet{
+    background:var(--surface);width:100%;max-width:480px;
+    border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow-y:auto;
+    animation:slideUp .24s cubic-bezier(.2,.8,.3,1);
+  }
+  .modal-sheet.center{
+    border-radius:22px;margin-bottom:auto;margin-top:auto;
+  }
+  @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  .modal-handle{width:38px;height:4px;background:var(--border);border-radius:3px;margin:0 auto 14px;}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .modal-head h2{font-size:17px;font-weight:800;}
+  .modal-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--surface-alt);font-size:15px;}
+
+  .field{margin-bottom:14px;}
+  .field label{font-size:12.5px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:6px;}
+  .field input[type=text], .field input[type=number], .field input[type=datetime-local], .field input[type=date], .field textarea{
+    width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);
+    background:var(--surface-alt);font-size:15px;color:var(--ink);
+  }
+  .field textarea{min-height:70px;resize:vertical;font-family:inherit;}
+  .check-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .check-row input{width:19px;height:19px;}
+  .check-row label{font-size:14px;font-weight:700;margin:0;}
+  .modal-actions{display:flex;gap:10px;margin-top:6px;}
+  .modal-actions button{flex:1;}
+
+  /* Calculator */
+  .calc-display{
+    background:var(--surface-alt);border-radius:var(--radius-md);padding:16px;
+    text-align:right;margin-bottom:14px;
+  }
+  .calc-expr{font-size:13px;color:var(--ink-soft);min-height:16px;font-variant-numeric:tabular-nums;}
+  .calc-result{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;word-break:break-all;}
+  .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+  .calc-grid button{
+    height:56px;border-radius:14px;border:none;font-size:19px;font-weight:700;
+    background:var(--surface-alt);color:var(--ink);
+  }
+  .calc-grid button.fn{background:var(--surface);border:1px solid var(--border);color:var(--danger);}
+  .calc-grid button.op-btn{background:var(--primary-tint);color:var(--primary-dark);}
+  .calc-grid button.eq{background:var(--primary);color:#fff;grid-column:span 1;}
+  .calc-grid button.zero{grid-column:span 2;}
+  .calc-grid button:active{transform:scale(0.93);}
+
+  /* toast */
+  #toast{
+    position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;
+    font-size:13.5px;font-weight:600;z-index:200;opacity:0;pointer-events:none;
+    transition:all .25s ease;max-width:88%;text-align:center;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .settings-list button{width:100%;margin-bottom:10px;text-align:left;padding:14px;border-radius:var(--radius-md);
+    border:1px solid var(--border);background:var(--surface-alt);font-size:14.5px;font-weight:700;display:flex;
+    align-items:center;gap:10px;}
+  .settings-subhead{
+    font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--ink-soft);margin:18px 0 10px;
+  }
+  .settings-subhead:first-child{margin-top:0;}
+
+  /* Payment QR */
+  .qr-display-card{text-align:center;margin-bottom:16px;}
+  .qr-display-card img{
+    width:100%;max-width:220px;aspect-ratio:1/1;object-fit:contain;
+    border-radius:var(--radius-md);border:1px solid var(--border);
+    background:var(--surface-alt);padding:10px;margin:0 auto 12px;display:block;
+  }
+  .qr-upi-row{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--surface-alt);border-radius:12px;padding:10px 14px;margin-bottom:14px;
+  }
+  .qr-upi-row .upi-text{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .qr-actions{display:flex;gap:8px;margin-bottom:10px;}
+  .qr-actions button{flex:1;padding:12px 4px;border-radius:12px;border:none;font-size:13px;font-weight:800;}
+  .qr-copy-btn{background:var(--surface);border:1px solid var(--border) !important;color:var(--ink);}
+  .qr-share-btn{background:#E7F7EC;color:#1E8E3E;border:1px solid #BFE3C9 !important;}
+  .qr-upload-preview{
+    width:100%;max-width:180px;aspect-ratio:1/1;object-fit:contain;
+    border-radius:var(--radius-md);border:1.5px dashed var(--border);
+    background:var(--surface-alt);margin:0 auto 14px;display:block;
+  }
+  .file-picker-btn{
+    width:100%;padding:13px;border-radius:12px;border:1.5px dashed var(--border);
+    background:var(--surface-alt);font-size:13.5px;font-weight:700;color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+
+  /* Activation screen */
+  .auth-screen{
+    position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(155deg,var(--primary) 0%, var(--primary-dark) 100%);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .auth-card{
+    background:var(--surface);border-radius:var(--radius-lg);
+    padding:30px 22px;width:100%;max-width:400px;
+    box-shadow:var(--shadow-lg);text-align:center;
+  }
+  .auth-logo{font-size:42px;margin-bottom:6px;}
+  .auth-title{font-size:21px;font-weight:800;margin-bottom:6px;letter-spacing:-0.01em;}
+  .auth-sub{font-size:13.5px;color:var(--ink-soft);margin-bottom:20px;}
+  .auth-card .field{text-align:left;}
+  .auth-error{
+    background:var(--danger-tint);color:var(--danger);font-size:13px;font-weight:700;
+    border-radius:10px;padding:10px 12px;margin-bottom:14px;text-align:left;
+    animation:slideDown .2s ease;
+  }
+  .auth-foot{font-size:11.5px;color:var(--ink-faint);margin-top:16px;}
+  body.auth-locked{overflow:hidden;}
+
+  /* Blocking reminder popup (centered, modal) */
+  .reminder-lock-overlay{
+    position:fixed;inset:0;z-index:500;
+    background:rgba(15,25,20,0.55);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .reminder-lock-card{
+    background:var(--surface);border-radius:var(--radius-lg);
+    padding:28px 22px;width:100%;max-width:380px;
+    box-shadow:var(--shadow-lg);text-align:center;
+    animation:slideDown .25s ease;
+  }
+  .reminder-lock-icon{font-size:38px;margin-bottom:6px;}
+  .reminder-lock-label{
+    font-size:12px;font-weight:700;color:var(--danger);letter-spacing:.06em;
+    text-transform:uppercase;margin-bottom:8px;
+  }
+  .reminder-lock-title{font-size:19px;font-weight:800;margin-bottom:6px;word-break:break-word;}
+  .reminder-lock-details{font-size:13.5px;color:var(--ink-soft);margin-bottom:6px;word-break:break-word;}
+  .reminder-lock-due{font-size:12px;color:var(--ink-faint);margin-bottom:18px;}
+  .reminder-lock-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .reminder-lock-actions button{
+    flex:1;min-width:70px;padding:11px 6px;border-radius:12px;border:none;
+    background:var(--surface-alt);font-size:13px;font-weight:700;color:var(--ink);
+    box-shadow:var(--shadow);
+  }
+  .reminder-lock-actions button:active{transform:scale(0.95);}
+  .reminder-lock-actions button.done-btn{
+    background:var(--primary);color:#fff;flex-basis:100%;margin-bottom:6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Activation / License Screen (blocks the app until authorized) -->
+<div class="auth-screen" id="activationScreen">
+  <div class="auth-card">
+    <div class="auth-logo">🔐</div>
+    <h1 class="auth-title">Activate Shop Manager</h1>
+    <p class="auth-sub">Enter your activation code to unlock the app.</p>
+    <div id="activationError" class="auth-error hidden"></div>
+    <div class="field">
+      <label for="activationCodeInput">Activation code</label>
+      <input type="text" id="activationCodeInput" placeholder="e.g. SSM-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    </div>
+    <button type="button" class="full-btn" id="activateBtn">Activate</button>
+    <p class="auth-foot">Need help? Contact your Shop Manager provider.</p>
+  </div>
+</div>
+
+<header class="appbar">
+  <button type="button" class="store-name-btn" id="storeNameBtn" aria-label="Open store website">
+    <span class="name-text" id="storeNameText">Simple Shop Manager</span>
+    <span class="link-hint" id="storeNameLinkHint"></span>
+  </button>
+  <div class="appbar-actions">
+    <button type="button" class="icon-btn" id="paymentQrBtn" aria-label="Payment QR and UPI ID">💳</button>
+    <button type="button" class="icon-btn" id="settingsBtn" aria-label="Settings and backup">⚙️</button>
+  </div>
+</header>
+
+<main>
+  <div id="reminderBanner"></div>
+
+  <!-- SALES TAB -->
+  <section id="tab-sales">
+    <div class="card revenue-card">
+      <div class="label">Today's Sales</div>
+      <div class="amount" id="todayRevenue">₹0</div>
+      <div class="revenue-stats">
+        <div class="stat"><div class="n" id="todayCustomers">0</div><div class="l">Customers</div></div>
+        <div class="stat"><div class="n" id="todayAverage">₹0</div><div class="l">Average Sale</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="entry-head">
+        <h3>New Sale</h3>
+        <button type="button" class="calc-btn" id="openCalcBtn" aria-label="Open calculator">🧮 Calculator</button>
+      </div>
+      <div class="amount-display">
+        <div class="amt">₹<span id="amountDisplay">0</span></div>
+        <div class="recorded-flash" id="recordedFlash">Recorded ✓</div>
+      </div>
+      <div class="numpad" id="numpad">
+        <button type="button" data-key="1">1</button>
+        <button type="button" data-key="2">2</button>
+        <button type="button" data-key="3">3</button>
+        <button type="button" data-key="4">4</button>
+        <button type="button" data-key="5">5</button>
+        <button type="button" data-key="6">6</button>
+        <button type="button" data-key="7">7</button>
+        <button type="button" data-key="8">8</button>
+        <button type="button" data-key="9">9</button>
+        <button type="button" class="op" data-key="C">C</button>
+        <button type="button" data-key="0">0</button>
+        <button type="button" class="op" data-key="back" aria-label="Backspace">⌫</button>
+      </div>
+      <button type="button" class="ok-btn" id="okBtn">OK — RECORD SALE</button>
+      <div class="action-row">
+        <button type="button" class="secondary-btn" id="viewTxnBtn">View Transactions</button>
+        <button type="button" class="secondary-btn" id="adjustPrevBtn">Adjust Previous Customer</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTS TAB -->
+  <section id="tab-reports" class="hidden">
+    <div class="section-title">📊 Period Dashboard</div>
+    <div class="segmented" id="periodTabs">
+      <button type="button" class="active" data-period="daily">Daily</button>
+      <button type="button" data-period="weekly">Weekly</button>
+      <button type="button" data-period="monthly">Monthly</button>
+      <button type="button" data-period="custom">Custom</button>
+    </div>
+
+    <div id="customDateRow" class="date-row hidden">
+      <div class="date-field">
+        <label for="customFrom">From date</label>
+        <input type="date" id="customFrom">
+      </div>
+      <div class="date-field">
+        <label for="customTo">To date</label>
+        <input type="date" id="customTo">
+      </div>
+    </div>
+    <button type="button" class="full-btn outline hidden" id="customShowBtn" style="margin-bottom:14px;">Show Report</button>
+
+    <div class="card">
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="v" id="repRevenue">₹0</div><div class="k">Revenue</div></div>
+        <div class="stat-tile"><div class="v" id="repCustomers">0</div><div class="k">Customers</div></div>
+        <div class="stat-tile"><div class="v" id="repAverage">₹0</div><div class="k">Average Sale</div></div>
+        <div class="stat-tile"><div class="v" id="repStock">₹0</div><div class="k">Purchased Stock</div></div>
+        <div class="stat-tile wide"><div class="v" id="repStockCount">0</div><div class="k">Stock Purchase Records</div></div>
+      </div>
+      <div id="monthlyCompareWrap" class="hidden">
+        <div class="compare-box">
+          <div class="compare-row"><span class="l">This month</span><span class="v" id="cmpThis">₹0</span></div>
+          <div class="compare-row"><span class="l">Last month</span><span class="v" id="cmpLast">₹0</span></div>
+          <div class="compare-row hl"><span class="l">Difference</span><span class="v" id="cmpDiff">₹0</span></div>
+          <div class="compare-row"><span class="l">Change</span><span class="v" id="cmpPct">0%</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STOCK TAB -->
+  <section id="tab-stock" class="hidden">
+    <div class="section-title">📦 Purchased Stock</div>
+    <div class="card">
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="v" id="stockToday">₹0</div><div class="k">Today</div></div>
+        <div class="stat-tile"><div class="v" id="stockWeek">₹0</div><div class="k">This Week</div></div>
+        <div class="stat-tile"><div class="v" id="stockMonth">₹0</div><div class="k">This Month</div></div>
+        <div class="stat-tile"><div class="v" id="stockCountAll">0</div><div class="k">Total Records</div></div>
+      </div>
+    </div>
+    <button type="button" class="full-btn amber" id="addStockBtn">+ Add Stock Purchase</button>
+    <div class="card" id="stockListCard">
+      <div id="stockList"></div>
+    </div>
+  </section>
+
+  <!-- UDHAAR (CREDIT) TAB -->
+  <section id="tab-udhaar" class="hidden">
+    <div class="section-title">📒 Udhaar (Credit Book)</div>
+    <div class="card udhaar-total-card">
+      <div class="label">Total Outstanding</div>
+      <div class="amount" id="udhaarTotalOutstanding">₹0</div>
+      <div class="sub" id="udhaarCustomerCount">0 customers</div>
+    </div>
+    <button type="button" class="full-btn" style="background:var(--violet);box-shadow:0 6px 16px rgba(107,79,160,0.3);" id="addCustomerBtn">+ Add Customer</button>
+    <div class="card" id="customerListCard">
+      <div id="customerList"></div>
+    </div>
+  </section>
+
+  <!-- NOTES TAB -->
+  <section id="tab-notes" class="hidden">
+    <div class="section-title">📝 Notes & Reminders</div>
+    <button type="button" class="full-btn" id="addNoteBtn">+ Add Note</button>
+    <div class="card" id="notesListCard">
+      <div id="notesList"></div>
+    </div>
+  </section>
+</main>
+
+<nav class="bottomnav">
+  <button type="button" class="navbtn active" data-tab="sales"><span class="ic">🏠</span><span>Sales</span></button>
+  <button type="button" class="navbtn" data-tab="reports"><span class="ic">📊</span><span>Reports</span></button>
+  <button type="button" class="navbtn" data-tab="stock"><span class="ic">📦</span><span>Stock</span></button>
+  <button type="button" class="navbtn" data-tab="udhaar"><span class="ic">📒</span><span>Udhaar</span></button>
+  <button type="button" class="navbtn" data-tab="notes"><span class="ic">📝</span><span>Notes</span></button>
+</nav>
+
+<div id="toast"></div>
+<input type="file" id="restoreFileInput" accept=".json,application/json" class="hidden">
+
+<!-- Transactions Modal -->
+<div class="modal-overlay hidden" id="txnModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2>Today's Transactions</h2><button type="button" class="modal-close" data-close="txnModal">✕</button></div>
+    <div id="txnList"></div>
+  </div>
+</div>
+
+<!-- Edit / Adjust Sale Modal -->
+<div class="modal-overlay hidden" id="editSaleModal">
+  <div class="modal-sheet center">
+    <div class="modal-head"><h2 id="editSaleTitle">Edit Sale</h2><button type="button" class="modal-close" data-close="editSaleModal">✕</button></div>
+    <div class="field">
+      <label for="editSaleAmount">Amount (₹)</label>
+      <input type="number" id="editSaleAmount" inputmode="decimal" min="0">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="full-btn outline" data-close="editSaleModal">Cancel</button>
+      <button type="button" class="full-btn" id="saveEditSaleBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Calculator Modal -->
+<div class="modal-overlay hidden" id="calcModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2>Calculator</h2><button type="button" class="modal-close" data-close="calcModal">✕</button></div>
+    <div class="calc-display">
+      <div class="calc-expr" id="calcExpr">&nbsp;</div>
+      <div class="calc-result" id="calcResult">0</div>
+    </div>
+    <div class="calc-grid" id="calcGrid">
+      <button type="button" class="fn" data-c="clear">C</button>
+      <button type="button" class="fn" data-c="sign">±</button>
+      <button type="button" class="fn" data-c="percent">%</button>
+      <button type="button" class="op-btn" data-c="÷">÷</button>
+
+      <button type="button" data-c="7">7</button>
+      <button type="button" data-c="8">8</button>
+      <button type="button" data-c="9">9</button>
+      <button type="button" class="op-btn" data-c="×">×</button>
+
+      <button type="button" data-c="4">4</button>
+      <button type="button" data-c="5">5</button>
+      <button type="button" data-c="6">6</button>
+      <button type="button" class="op-btn" data-c="−">−</button>
+
+      <button type="button" data-c="1">1</button>
+      <button type="button" data-c="2">2</button>
+      <button type="button" data-c="3">3</button>
+      <button type="button" class="op-btn" data-c="+">+</button>
+
+      <button type="button" class="zero" data-c="0">0</button>
+      <button type="button" data-c=".">.</button>
+      <button type="button" class="eq" data-c="=">=</button>
+    </div>
+    <button type="button" class="full-btn outline" style="margin-top:14px;" data-close="calcModal">Close</button>
+  </div>
+</div>
+
+<!-- Stock Form Modal -->
+<div class="modal-overlay hidden" id="stockFormModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2 id="stockFormTitle">Add Stock Purchase</h2><button type="button" class="modal-close" data-close="stockFormModal">✕</button></div>
+    <div class="field"><label for="stockName">Product name</label><input type="text" id="stockName" placeholder="e.g. Rice"></div>
+    <div class="field"><label for="stockQty">Quantity</label><input type="text" id="stockQty" placeholder="e.g. 20 bags"></div>
+    <div class="field"><label for="stockAmount">Purchase amount (₹)</label><input type="number" id="stockAmount" inputmode="decimal" min="0"></div>
+    <div class="date-row">
+      <div class="date-field"><label for="stockDate">Date</label><input type="date" id="stockDate"></div>
+      <div class="date-field"><label for="stockTime">Time</label><input type="time" id="stockTime"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="full-btn outline" data-close="stockFormModal">Cancel</button>
+      <button type="button" class="full-btn amber" id="saveStockBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Note Form Modal -->
+<div class="modal-overlay hidden" id="noteFormModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2 id="noteFormTitle">Add Note</h2><button type="button" class="modal-close" data-close="noteFormModal">✕</button></div>
+    <div class="field"><label for="noteTitle">Note title</label><input type="text" id="noteTitle" placeholder="e.g. Call Arun about payment"></div>
+    <div class="field"><label for="noteDetails">Note details</label><textarea id="noteDetails" placeholder="Optional details"></textarea></div>
+    <div class="check-row">
+      <input type="checkbox" id="noteReminderCheck">
+      <label for="noteReminderCheck">Add reminder</label>
+    </div>
+    <div id="noteReminderFields" class="hidden">
+      <div class="date-row">
+        <div class="date-field"><label for="noteRemDate">Date</label><input type="date" id="noteRemDate"></div>
+        <div class="date-field"><label for="noteRemTime">Time</label><input type="time" id="noteRemTime"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="full-btn outline" data-close="noteFormModal">Cancel</button>
+      <button type="button" class="full-btn" id="saveNoteBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Form Modal -->
+<div class="modal-overlay hidden" id="customerFormModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2 id="customerFormTitle">Add Customer</h2><button type="button" class="modal-close" data-close="customerFormModal">✕</button></div>
+    <div class="field"><label for="customerName">Customer name</label><input type="text" id="customerName" placeholder="e.g. Arun Kumar"></div>
+    <div class="field"><label for="customerPhone">Phone number (optional)</label><input type="text" id="customerPhone" inputmode="tel" placeholder="e.g. 9876543210"></div>
+    <div class="modal-actions">
+      <button type="button" class="full-btn outline" data-close="customerFormModal">Cancel</button>
+      <button type="button" class="full-btn" style="background:var(--violet);" id="saveCustomerBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Detail Modal -->
+<div class="modal-overlay hidden" id="customerDetailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2 id="customerDetailName">Customer</h2><button type="button" class="modal-close" data-close="customerDetailModal">✕</button></div>
+    <div class="detail-balance">
+      <div class="v" id="customerDetailBalance">₹0</div>
+      <div class="k">Outstanding balance</div>
+    </div>
+    <div class="detail-actions">
+      <button type="button" class="credit-btn" id="addCreditBtn">+ Add Credit (Udhaar)</button>
+      <button type="button" class="payment-btn" id="addPaymentBtn">+ Record Payment</button>
+    </div>
+    <button type="button" class="whatsapp-btn hidden" id="whatsappRemindBtn">💬 Send Reminder on WhatsApp</button>
+    <div class="mini-actions" style="margin-bottom:12px;">
+      <button type="button" class="mini-btn" id="editCustomerBtn">Edit Customer</button>
+      <button type="button" class="mini-btn danger" id="deleteCustomerBtn">Delete Customer</button>
+    </div>
+    <div class="section-title" style="font-size:13px;">Transaction History</div>
+    <div id="customerEntryList"></div>
+  </div>
+</div>
+
+<!-- Udhaar Entry (Credit / Payment) Modal -->
+<div class="modal-overlay hidden" id="udhaarEntryModal">
+  <div class="modal-sheet center">
+    <div class="modal-head"><h2 id="udhaarEntryTitle">Add Credit</h2><button type="button" class="modal-close" data-close="udhaarEntryModal">✕</button></div>
+    <div class="field"><label for="udhaarEntryAmount">Amount (₹)</label><input type="number" id="udhaarEntryAmount" inputmode="decimal" min="0"></div>
+    <div class="field"><label for="udhaarEntryNote">Note (optional)</label><input type="text" id="udhaarEntryNote" placeholder="e.g. Groceries"></div>
+    <div class="modal-actions">
+      <button type="button" class="full-btn outline" data-close="udhaarEntryModal">Cancel</button>
+      <button type="button" class="full-btn" id="saveUdhaarEntryBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings / Backup Modal -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2>Settings & Backup</h2><button type="button" class="modal-close" data-close="settingsModal">✕</button></div>
+
+    <div class="settings-subhead">Store Details</div>
+    <div class="field"><label for="storeNameInput">Store name (shown at the top of the app)</label>
+      <input type="text" id="storeNameInput" placeholder="e.g. Sharma General Store"></div>
+    <div class="field"><label for="storeWebsiteInput">Store website (opens when the name is tapped)</label>
+      <input type="text" id="storeWebsiteInput" placeholder="e.g. https://your-store-website.com"></div>
+    <button type="button" class="full-btn outline" id="saveStoreDetailsBtn" style="margin-bottom:18px;">Save Store Details</button>
+
+    <div class="settings-subhead">Data</div>
+    <div class="settings-list">
+      <button type="button" id="backupBtn">💾 Backup Data</button>
+      <button type="button" id="restoreBtn">📂 Restore Backup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment QR Modal -->
+<div class="modal-overlay hidden" id="paymentQrModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head"><h2>Payment QR</h2><button type="button" class="modal-close" data-close="paymentQrModal">✕</button></div>
+
+    <!-- Shown when a UPI ID / QR is already saved -->
+    <div id="paymentQrDisplay" class="hidden">
+      <div class="qr-display-card">
+        <img id="paymentQrImage" src="" alt="Payment QR code">
+      </div>
+      <div class="qr-upi-row">
+        <span class="upi-text" id="paymentUpiText"></span>
+      </div>
+      <div class="qr-actions">
+        <button type="button" class="qr-copy-btn" id="copyUpiBtn">📋 Copy UPI ID</button>
+        <button type="button" class="qr-share-btn" id="shareQrBtn">💬 Share QR</button>
+      </div>
+      <button type="button" class="full-btn outline" id="editPaymentQrBtn">Edit / Replace</button>
+    </div>
+
+    <!-- Shown when nothing is saved yet, or while editing -->
+    <div id="paymentQrForm">
+      <div class="field"><label for="upiIdInput">UPI ID</label>
+        <input type="text" id="upiIdInput" placeholder="e.g. shopname@okhdfcbank"></div>
+      <img id="qrUploadPreview" class="qr-upload-preview hidden" alt="QR preview">
+      <button type="button" class="file-picker-btn" id="chooseQrFileBtn">📷 Choose QR Image</button>
+      <input type="file" id="qrFileInput" accept="image/*" class="hidden">
+      <div class="modal-actions">
+        <button type="button" class="full-btn outline" id="cancelPaymentQrBtn">Cancel</button>
+        <button type="button" class="full-btn" id="savePaymentQrBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Generic Confirm Modal -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal-sheet center">
+    <div class="modal-head"><h2 id="confirmTitle">Are you sure?</h2></div>
+    <p id="confirmMessage" style="font-size:14px;color:var(--ink-soft);margin-bottom:16px;"></p>
+    <div class="modal-actions">
+      <button type="button" class="full-btn outline" id="confirmCancelBtn">Cancel</button>
+      <button type="button" class="full-btn" id="confirmOkBtn" style="background:var(--danger);box-shadow:none;">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Blocking Reminder Popup (centered, replaces old inline banner) -->
+<div class="reminder-lock-overlay hidden" id="reminderLockOverlay">
+  <div class="reminder-lock-card">
+    <div class="reminder-lock-icon">🔔</div>
+    <div class="reminder-lock-label">Reminder</div>
+    <div class="reminder-lock-title" id="reminderPopupTitle"></div>
+    <div class="reminder-lock-details hidden" id="reminderPopupDetails"></div>
+    <div class="reminder-lock-due">Due now</div>
+    <div class="reminder-lock-actions">
+      <button type="button" class="done-btn" data-rem-done="" id="reminderDoneBtn">Done</button>
+      <button type="button" data-rem-snooze="" data-mins="10">+10m</button>
+      <button type="button" data-rem-snooze="" data-mins="60">+1h</button>
+      <button type="button" data-rem-snooze="" data-mins="1440">Tomorrow</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================
+   1. APP STATE
+   ========================================================= */
+const state = {
+  sales: [],
+  stock: [],
+  notes: [],
+  customers: [],
+  udhaarEntries: [],
+  currentAmount: '',
+  activeTab: 'sales',
+  activePeriod: 'daily',
+  okLocked: false,
+  editingSaleId: null,       // if set, editSaleModal saves to this id
+  adjustMode: false,         // true when opened via "Adjust Previous Customer"
+  editingStockId: null,
+  editingNoteId: null,
+  editingCustomerId: null,
+  activeCustomerId: null,    // customer currently open in the detail modal
+  udhaarEntryMode: 'credit', // 'credit' or 'payment', for the entry modal
+  confirmCallback: null,
+  calc: { display:'0', expr:'', first:null, operator:null, waitingSecond:false }
+};
+
+/* =========================================================
+   2. INDEXEDDB
+   ========================================================= */
+const DB_NAME = 'SimpleShopManagerDB';
+const DB_VERSION = 2;
+let db = null;
+
+function openDB(){
+  return new Promise((resolve, reject) => {
+    if(!('indexedDB' in window)){ reject(new Error('IndexedDB not supported')); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const _db = e.target.result;
+      // Existing stores are only created if missing, so upgrading never touches
+      // or clears data already saved in sales / stockPurchases / notes / settings.
+      if(!_db.objectStoreNames.contains('sales')){
+        const s = _db.createObjectStore('sales', { keyPath:'id' });
+        s.createIndex('timestamp','timestamp',{unique:false});
+        s.createIndex('date','date',{unique:false});
+      }
+      if(!_db.objectStoreNames.contains('stockPurchases')){
+        const s = _db.createObjectStore('stockPurchases', { keyPath:'id' });
+        s.createIndex('timestamp','timestamp',{unique:false});
+        s.createIndex('date','date',{unique:false});
+      }
+      if(!_db.objectStoreNames.contains('notes')){
+        const s = _db.createObjectStore('notes', { keyPath:'id' });
+        s.createIndex('reminderTime','reminderTime',{unique:false});
+        s.createIndex('createdAt','createdAt',{unique:false});
+      }
+      if(!_db.objectStoreNames.contains('settings')){
+        _db.createObjectStore('settings', { keyPath:'key' });
+      }
+      // New in v2: udhaar (credit) tracking. Added alongside existing stores.
+      if(!_db.objectStoreNames.contains('customers')){
+        const s = _db.createObjectStore('customers', { keyPath:'id' });
+        s.createIndex('createdAt','createdAt',{unique:false});
+        s.createIndex('name','name',{unique:false});
+      }
+      if(!_db.objectStoreNames.contains('udhaarEntries')){
+        const s = _db.createObjectStore('udhaarEntries', { keyPath:'id' });
+        s.createIndex('customerId','customerId',{unique:false});
+        s.createIndex('timestamp','timestamp',{unique:false});
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function dbAdd(store, value){
+  return new Promise((resolve, reject) => {
+    try{
+      const tx = db.transaction(store, 'readwrite');
+      const req = tx.objectStore(store).add(value);
+      req.onsuccess = () => resolve(value);
+      req.onerror = (e) => reject(e.target.error);
+    }catch(err){ reject(err); }
+  });
+}
+function dbPut(store, value){
+  return new Promise((resolve, reject) => {
+    try{
+      const tx = db.transaction(store, 'readwrite');
+      const req = tx.objectStore(store).put(value);
+      req.onsuccess = () => resolve(value);
+      req.onerror = (e) => reject(e.target.error);
+    }catch(err){ reject(err); }
+  });
+}
+function dbGetAll(store){
+  return new Promise((resolve, reject) => {
+    try{
+      const tx = db.transaction(store, 'readonly');
+      const req = tx.objectStore(store).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = (e) => reject(e.target.error);
+    }catch(err){ reject(err); }
+  });
+}
+function dbDelete(store, key){
+  return new Promise((resolve, reject) => {
+    try{
+      const tx = db.transaction(store, 'readwrite');
+      const req = tx.objectStore(store).delete(key);
+      req.onsuccess = () => resolve(true);
+      req.onerror = (e) => reject(e.target.error);
+    }catch(err){ reject(err); }
+  });
+}
+function dbClear(store){
+  return new Promise((resolve, reject) => {
+    try{
+      const tx = db.transaction(store, 'readwrite');
+      const req = tx.objectStore(store).clear();
+      req.onsuccess = () => resolve(true);
+      req.onerror = (e) => reject(e.target.error);
+    }catch(err){ reject(err); }
+  });
+}
+
+/* =========================================================
+   SETTINGS STORE HELPERS (generic key/value, used by store
+   details + payment QR below — does not touch sales/stock/notes)
+   ========================================================= */
+async function getSetting(key){
+  try{
+    const tx = db.transaction('settings', 'readonly');
+    return await new Promise((resolve, reject)=>{
+      const req = tx.objectStore('settings').get(key);
+      req.onsuccess = () => resolve(req.result ? req.result.value : null);
+      req.onerror = (e) => reject(e.target.error);
+    });
+  }catch(err){ return null; }
+}
+async function setSetting(key, value){
+  await dbPut('settings', { key, value });
+}
+
+/* =========================================================
+   1b. LICENSING / AUTHORIZATION
+   Talks only to the public Apps Script Web App endpoint below.
+   No admin secret or server credential is ever stored here.
+   Authorization info (licenseId/deviceId/token/expiresAt) is kept
+   in the existing 'settings' store - it never touches sales/stock/
+   notes/customers/udhaarEntries.
+   ========================================================= */
+const LICENSE_API_URL = 'https://script.google.com/macros/s/AKfycbxSoaMW8MHt2TU1aU3Qjet4f7gs8dGrMJY0v6_z58s4RfNdtYdX56vWGWE1eqZl5WRQRA/exec';
+const REVALIDATE_INTERVAL_MS = 6 * 60 * 60 * 1000; // revalidate at most every 6 hours / once per session
+
+const auth = {
+  deviceId: null,
+  licenseId: null,
+  token: null,
+  expiresAt: null,
+  shopName: null,
+  authorized: false
+};
+
+function genDeviceId(){
+  let id;
+  try{
+    id = crypto.randomUUID();
+  }catch(e){
+    // Fallback for browsers without crypto.randomUUID - not cryptographically
+    // strong, but only needs to be stable and non-invasive, not secret.
+    id = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/x/g, ()=>{
+      return Math.floor(Math.random()*16).toString(16);
+    });
+  }
+  return 'SSM-DEVICE-' + id;
+}
+
+async function loadAuthFromSettings(){
+  auth.deviceId = await getSetting('authDeviceId');
+  if(!auth.deviceId){
+    auth.deviceId = genDeviceId();
+    await setSetting('authDeviceId', auth.deviceId);
+  }
+  auth.licenseId = await getSetting('authLicenseId');
+  auth.token = await getSetting('authToken');
+  auth.expiresAt = await getSetting('authExpiresAt');
+  auth.shopName = await getSetting('authShopName');
+}
+
+async function saveAuthToSettings(){
+  await setSetting('authLicenseId', auth.licenseId);
+  await setSetting('authToken', auth.token);
+  await setSetting('authExpiresAt', auth.expiresAt);
+  await setSetting('authShopName', auth.shopName);
+  await setSetting('authLastValidated', Date.now());
+}
+
+async function clearAuthFromSettings(){
+  auth.licenseId = null; auth.token = null; auth.expiresAt = null;
+  await setSetting('authLicenseId', null);
+  await setSetting('authToken', null);
+  await setSetting('authExpiresAt', null);
+}
+
+function friendlyAuthError(raw){
+  const s = String(raw || '').toLowerCase();
+  if(!s) return 'Could not reach the activation server. Please check your connection and try again.';
+  if(s.includes('expire')) return 'Your license has expired. Please renew to continue.';
+  if(s.includes('revoke')) return 'This license has been revoked. Please contact support.';
+  if(s.includes('device')) return 'This activation code is already active on a different device.';
+  if(s.includes('used') || s.includes('already')) return 'This activation code has already been used.';
+  if(s.includes('network') || s.includes('fetch') || s.includes('timeout')) return 'Could not reach the activation server. Please check your connection and try again.';
+  if(s.includes('invalid') || s.includes('not found') || s.includes('unauthor')) return 'That activation code is not valid. Please check and try again.';
+  return 'Activation could not be completed. Please check your code and try again.';
+}
+
+async function callLicenseApi(payload){
+  try{
+    const res = await fetch(LICENSE_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids a CORS preflight against Apps Script
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) return { ok:false, code:'network' };
+    return await res.json();
+  }catch(err){
+    return { ok:false, code:'network' };
+  }
+}
+
+async function activateLicense(code){
+  const res = await callLicenseApi({ action:'activate', activationCode: code, deviceId: auth.deviceId });
+  if(res && res.ok){
+    auth.licenseId = res.licenseId;
+    auth.token = res.token;
+    auth.expiresAt = res.expiresAt;
+    auth.shopName = res.shopName || null;
+    await saveAuthToSettings();
+    auth.authorized = true;
+    return { ok:true };
+  }
+  return { ok:false, message: friendlyAuthError(res && (res.error || res.code || res.message)) };
+}
+
+async function validateLicense(){
+  if(!auth.licenseId || !auth.token) return { ok:false, code:'invalid' };
+  return await callLicenseApi({ action:'validate', licenseId: auth.licenseId, deviceId: auth.deviceId, token: auth.token });
+}
+
+function showActivationScreen(message){
+  document.getElementById('activationScreen').classList.remove('hidden');
+  document.body.classList.add('auth-locked');
+  setActivationError(message || '');
+}
+function hideActivationScreen(){
+  document.getElementById('activationScreen').classList.add('hidden');
+  document.body.classList.remove('auth-locked');
+}
+function setActivationError(msg){
+  const el = document.getElementById('activationError');
+  el.textContent = msg || '';
+  el.classList.toggle('hidden', !msg);
+}
+function setActivationLoading(loading){
+  const btn = document.getElementById('activateBtn');
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Activating…' : 'Activate';
+}
+async function handleActivateClick(){
+  const input = document.getElementById('activationCodeInput');
+  const code = input.value.trim();
+  if(!code){ setActivationError('Please enter your activation code.'); return; }
+  setActivationError('');
+  setActivationLoading(true);
+  try{
+    const result = await activateLicense(code);
+    if(result.ok){
+      hideActivationScreen();
+      toast('Activated successfully');
+    } else {
+      setActivationError(result.message);
+    }
+  }catch(err){
+    setActivationError('Could not reach the activation server. Please check your connection and try again.');
+  }
+  setActivationLoading(false);
+}
+
+// Runs on every startup. Trusts a still-fresh local session immediately
+// (no flash/lockout), and revalidates with the server at most once per
+// session/interval. Never deletes sales/stock/notes/customers/udhaar data.
+async function initAuth(){
+  try{
+    await loadAuthFromSettings();
+  }catch(err){
+    // Settings unavailable for some reason - fail safe to the activation screen
+    showActivationScreen();
+    return;
+  }
+
+  if(!auth.licenseId || !auth.token){
+    showActivationScreen();
+    return;
+  }
+
+  const lastValidated = await getSetting('authLastValidated');
+  const now = Date.now();
+  const needsRevalidate = !lastValidated || (now - lastValidated) > REVALIDATE_INTERVAL_MS;
+
+  if(!needsRevalidate){
+    auth.authorized = true;
+    hideActivationScreen();
+    return;
+  }
+
+  try{
+    const res = await validateLicense();
+    if(res && res.ok){
+      if(res.expiresAt) auth.expiresAt = res.expiresAt;
+      if(res.shopName) auth.shopName = res.shopName;
+      await saveAuthToSettings();
+      auth.authorized = true;
+      hideActivationScreen();
+    } else if(res && (res.code === 'network')){
+      // Temporary network failure - let the existing valid session continue
+      // rather than locking the user out or touching their local data.
+      auth.authorized = true;
+      hideActivationScreen();
+    } else {
+      await clearAuthFromSettings();
+      auth.authorized = false;
+      showActivationScreen(friendlyAuthError(res && (res.error || res.code || res.message)));
+    }
+  }catch(err){
+    // Unexpected/network error - do not destroy local data or lock the user out
+    auth.authorized = true;
+    hideActivationScreen();
+  }
+}
+
+/* =========================================================
+   STORE DETAILS (clickable header name -> opens store website)
+   ========================================================= */
+async function loadStoreDetails(){
+  const name = await getSetting('storeName');
+  const website = await getSetting('storeWebsite');
+  document.getElementById('storeNameText').textContent = name || 'Simple Shop Manager';
+  document.getElementById('storeNameLinkHint').textContent = website ? '🔗' : '';
+  document.getElementById('storeNameInput').value = name || '';
+  document.getElementById('storeWebsiteInput').value = website || '';
+}
+function normalizeWebsiteUrl(raw){
+  const v = String(raw||'').trim();
+  if(!v) return '';
+  if(/^https?:\/\//i.test(v)) return v;
+  return 'https://' + v;
+}
+async function saveStoreDetails(){
+  const name = document.getElementById('storeNameInput').value.trim();
+  const websiteRaw = document.getElementById('storeWebsiteInput').value.trim();
+  const website = normalizeWebsiteUrl(websiteRaw);
+  await setSetting('storeName', name);
+  await setSetting('storeWebsite', website);
+  await loadStoreDetails();
+  toast('Store details saved');
+  closeModal('settingsModal');
+}
+async function handleStoreNameClick(){
+  const website = await getSetting('storeWebsite');
+  if(website){
+    window.open(website, '_blank');
+  } else {
+    toast('Add your store website in Settings to make this open it');
+  }
+}
+
+/* =========================================================
+   PAYMENT QR (UPI ID + uploaded QR image)
+   Stored as plain settings values: 'paymentUpiId' (text) and
+   'paymentQrImage' (a base64 data URL string).
+   ========================================================= */
+let pendingQrDataUrl = null; // holds a newly chosen image until Save is pressed
+
+async function loadPaymentQr(){
+  const upiId = await getSetting('paymentUpiId');
+  const qrImage = await getSetting('paymentQrImage');
+  const hasData = !!(upiId && qrImage);
+  document.getElementById('paymentQrDisplay').classList.toggle('hidden', !hasData);
+  document.getElementById('paymentQrForm').classList.toggle('hidden', hasData);
+  if(hasData){
+    document.getElementById('paymentQrImage').src = qrImage;
+    document.getElementById('paymentUpiText').textContent = upiId;
+  }
+  return { upiId, qrImage };
+}
+function resetPaymentQrForm(){
+  pendingQrDataUrl = null;
+  document.getElementById('upiIdInput').value = '';
+  document.getElementById('qrUploadPreview').src = '';
+  document.getElementById('qrUploadPreview').classList.add('hidden');
+}
+function isValidUpiId(v){
+  return /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(v);
+}
+async function handleSavePaymentQr(){
+  const upiId = document.getElementById('upiIdInput').value.trim();
+  if(!upiId){ toast('Enter your UPI ID'); return; }
+  if(!isValidUpiId(upiId)){ toast('Enter a valid UPI ID, e.g. name@bank'); return; }
+  const existingQr = await getSetting('paymentQrImage');
+  const qrToSave = pendingQrDataUrl || existingQr;
+  if(!qrToSave){ toast('Choose a QR image'); return; }
+  try{
+    await setSetting('paymentUpiId', upiId);
+    await setSetting('paymentQrImage', qrToSave);
+    pendingQrDataUrl = null;
+    await loadPaymentQr();
+    toast('Payment QR saved');
+  }catch(err){ toast('Could not save payment QR. Try again.'); }
+}
+function handleQrFileChosen(file){
+  if(!file) return;
+  if(!file.type || file.type.indexOf('image/') !== 0){
+    toast('Please choose an image file'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    pendingQrDataUrl = e.target.result;
+    const preview = document.getElementById('qrUploadPreview');
+    preview.src = pendingQrDataUrl;
+    preview.classList.remove('hidden');
+  };
+  reader.onerror = ()=>{ toast('Could not read that image. Try again.'); };
+  reader.readAsDataURL(file);
+}
+async function handleCopyUpi(){
+  const upiId = await getSetting('paymentUpiId');
+  if(!upiId) return;
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(upiId);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = upiId; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    toast('UPI ID copied');
+  }catch(err){ toast('Could not copy. Please copy it manually.'); }
+}
+async function handleShareQr(){
+  const upiId = await getSetting('paymentUpiId');
+  const qrImage = await getSetting('paymentQrImage');
+  if(!qrImage){ toast('No QR saved yet'); return; }
+  try{
+    const blob = await (await fetch(qrImage)).blob();
+    const file = new File([blob], 'payment-qr.png', { type: blob.type || 'image/png' });
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      await navigator.share({
+        files:[file],
+        title:'Payment QR',
+        text: upiId ? ('Pay via UPI: '+upiId) : 'Scan to pay'
+      });
+      return;
+    }
+  }catch(err){
+    // User cancelled the native share sheet, or the browser refused —
+    // fall through to the text-only fallback below rather than failing silently.
+  }
+  // Fallback for browsers without image-sharing support (e.g. desktop
+  // Chrome, older WebViews): WhatsApp's own link format can only carry
+  // text, not an image, so open a chat with the UPI ID and let the
+  // shopkeeper attach the QR image themselves.
+  const msg = upiId ? ('Pay via UPI: '+upiId) : 'Scan the QR to pay';
+  window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank');
+  toast('This browser can\'t attach images directly — opened WhatsApp with your UPI ID. Attach the QR image manually.');
+}
+
+/* =========================================================
+   UTIL HELPERS
+   ========================================================= */
+function genId(){ return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,9); }
+function pad2(n){ return n<10 ? '0'+n : ''+n; }
+function dateKey(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function timeLabel(d){
+  let h = d.getHours(); const m = d.getMinutes();
+  const ampm = h>=12 ? 'PM':'AM';
+  h = h % 12; if(h===0) h = 12;
+  return h+':'+pad2(m)+' '+ampm;
+}
+function fmtDateLabel(dkey){
+  const [y,m,d] = dkey.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d+' '+months[m-1]+' '+y;
+}
+// wa.me requires a full international number (country code, no leading 0/+).
+// Bug fix: a bare 10-digit Indian mobile number was being sent as-is, which
+// WhatsApp rejects as an invalid number. This normalizes common local formats.
+function normalizePhoneForWhatsApp(phone){
+  let digits = String(phone||'').replace(/[^0-9]/g,'');
+  if(digits.length === 10) return '91'+digits;
+  if(digits.length === 11 && digits.startsWith('0')) return '91'+digits.slice(1);
+  return digits; // already has a country code (12+ digits) — use as-is
+}
+function money(n){
+  n = Number(n)||0;
+  const neg = n < 0; n = Math.abs(n);
+  const rounded = Math.round(n*100)/100;
+  const parts = rounded.toString().split('.');
+  let intPart = parts[0];
+  let dec = '';
+  if(parts[1]){
+    let d = parts[1].slice(0,2);
+    if(d.length === 1) d += '0'; // pad e.g. "5" -> "50" so 42500.5 shows as 42,500.50
+    dec = '.'+d;
+  }
+  let lastThree = intPart.slice(-3);
+  let other = intPart.slice(0,-3);
+  if(other !== '') lastThree = ','+lastThree;
+  const formatted = other.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
+  return (neg?'-':'')+'₹'+formatted+dec;
+}
+function toast(msg, ms){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ el.classList.remove('show'); }, ms||2200);
+}
+function startOfWeek(d){
+  const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day = dt.getDay(); // 0 = Sunday
+  dt.setDate(dt.getDate()-day);
+  return dt;
+}
+function endOfWeek(d){
+  const s = startOfWeek(d);
+  const e = new Date(s); e.setDate(e.getDate()+6);
+  return e;
+}
+function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+
+/* =========================================================
+   3. SALES
+   ========================================================= */
+async function addSale(amount){
+  const now = new Date();
+  const record = {
+    id: genId(),
+    amount: amount,
+    date: dateKey(now),
+    time: timeLabel(now),
+    timestamp: now.getTime()
+  };
+  await dbAdd('sales', record);
+  state.sales.push(record);
+  return record;
+}
+async function updateSaleAmount(id, newAmount){
+  const rec = state.sales.find(s => s.id === id);
+  if(!rec) throw new Error('Sale not found');
+  rec.amount = newAmount;
+  await dbPut('sales', rec);
+  return rec;
+}
+async function deleteSale(id){
+  await dbDelete('sales', id);
+  state.sales = state.sales.filter(s => s.id !== id);
+}
+function todaysSales(){
+  const tk = dateKey(new Date());
+  return state.sales.filter(s => s.date === tk).sort((a,b)=>b.timestamp-a.timestamp);
+}
+function salesInRange(fromKey, toKey){
+  return state.sales.filter(s => s.date >= fromKey && s.date <= toKey);
+}
+function computeStats(list){
+  const revenue = list.reduce((sum,s)=>sum+Number(s.amount||0),0);
+  const customers = list.length;
+  const average = customers>0 ? revenue/customers : 0;
+  return { revenue, customers, average };
+}
+
+/* =========================================================
+   4. STOCK
+   ========================================================= */
+async function addStock(product, quantity, amount, dateObj){
+  const record = {
+    id: genId(),
+    product, quantity, amount,
+    date: dateKey(dateObj),
+    time: timeLabel(dateObj),
+    timestamp: dateObj.getTime()
+  };
+  await dbAdd('stockPurchases', record);
+  state.stock.push(record);
+  return record;
+}
+async function updateStock(id, product, quantity, amount, dateObj){
+  const rec = state.stock.find(s=>s.id===id);
+  if(!rec) throw new Error('Stock record not found');
+  rec.product = product; rec.quantity = quantity; rec.amount = amount;
+  rec.date = dateKey(dateObj); rec.time = timeLabel(dateObj); rec.timestamp = dateObj.getTime();
+  await dbPut('stockPurchases', rec);
+  return rec;
+}
+async function deleteStock(id){
+  await dbDelete('stockPurchases', id);
+  state.stock = state.stock.filter(s=>s.id!==id);
+}
+function stockInRange(fromKey, toKey){
+  return state.stock.filter(s => s.date >= fromKey && s.date <= toKey);
+}
+function stockSum(list){ return list.reduce((sum,s)=>sum+Number(s.amount||0),0); }
+
+/* =========================================================
+   5. NOTES
+   ========================================================= */
+async function addNote(title, details, reminderTime){
+  const now = Date.now();
+  const record = {
+    id: genId(), title, details: details||'',
+    createdAt: now, reminderTime: reminderTime||null,
+    done: false, snoozedUntil: null
+  };
+  await dbAdd('notes', record);
+  state.notes.push(record);
+  return record;
+}
+async function updateNote(id, title, details, reminderTime){
+  const rec = state.notes.find(n=>n.id===id);
+  if(!rec) throw new Error('Note not found');
+  rec.title = title; rec.details = details||''; rec.reminderTime = reminderTime||null;
+  rec.snoozedUntil = null;
+  await dbPut('notes', rec);
+  return rec;
+}
+async function toggleNoteDone(id){
+  const rec = state.notes.find(n=>n.id===id);
+  if(!rec) return;
+  rec.done = !rec.done;
+  await dbPut('notes', rec);
+}
+async function deleteNote(id){
+  await dbDelete('notes', id);
+  state.notes = state.notes.filter(n=>n.id!==id);
+}
+async function snoozeNote(id, minutes){
+  const rec = state.notes.find(n=>n.id===id);
+  if(!rec) return;
+  rec.snoozedUntil = Date.now() + minutes*60000;
+  await dbPut('notes', rec);
+  renderReminderBanner();
+}
+
+/* =========================================================
+   5b. UDHAAR (CREDIT TRACKING)
+   This is a separate, self-contained feature. It reads/writes only
+   the 'customers' and 'udhaarEntries' stores and does not modify any
+   sales, stock, or notes logic above.
+   ========================================================= */
+async function addCustomer(name, phone){
+  const record = { id: genId(), name, phone: phone||'', createdAt: Date.now() };
+  await dbAdd('customers', record);
+  state.customers.push(record);
+  return record;
+}
+async function updateCustomer(id, name, phone){
+  const rec = state.customers.find(c=>c.id===id);
+  if(!rec) throw new Error('Customer not found');
+  rec.name = name; rec.phone = phone||'';
+  await dbPut('customers', rec);
+  return rec;
+}
+async function deleteCustomer(id){
+  await dbDelete('customers', id);
+  state.customers = state.customers.filter(c=>c.id!==id);
+  // Cascade delete this customer's udhaar entries so balances don't orphan.
+  const toRemove = state.udhaarEntries.filter(e=>e.customerId===id);
+  for(const e of toRemove){ await dbDelete('udhaarEntries', e.id); }
+  state.udhaarEntries = state.udhaarEntries.filter(e=>e.customerId!==id);
+}
+async function addUdhaarEntry(customerId, type, amount, note){
+  const now = new Date();
+  const record = {
+    id: genId(), customerId, type, amount: Number(amount),
+    note: note||'', date: dateKey(now), time: timeLabel(now), timestamp: now.getTime()
+  };
+  await dbAdd('udhaarEntries', record);
+  state.udhaarEntries.push(record);
+  return record;
+}
+async function deleteUdhaarEntry(id){
+  await dbDelete('udhaarEntries', id);
+  state.udhaarEntries = state.udhaarEntries.filter(e=>e.id!==id);
+}
+function customerEntries(customerId){
+  return state.udhaarEntries.filter(e=>e.customerId===customerId).sort((a,b)=>b.timestamp-a.timestamp);
+}
+function customerBalance(customerId){
+  let bal = 0;
+  state.udhaarEntries.forEach(e=>{
+    if(e.customerId !== customerId) return;
+    bal += (e.type === 'credit') ? Number(e.amount||0) : -Number(e.amount||0);
+  });
+  return bal;
+}
+function totalOutstandingUdhaar(){
+  let total = 0;
+  state.customers.forEach(c => { const b = customerBalance(c.id); if(b > 0) total += b; });
+  return total;
+}
+
+/* =========================================================
+   6. REPORTS
+   ========================================================= */
+function getPeriodRange(period){
+  const now = new Date();
+  if(period === 'daily'){
+    const k = dateKey(now); return { from:k, to:k };
+  }
+  if(period === 'weekly'){
+    return { from: dateKey(startOfWeek(now)), to: dateKey(endOfWeek(now)) };
+  }
+  if(period === 'monthly'){
+    return { from: dateKey(startOfMonth(now)), to: dateKey(endOfMonth(now)) };
+  }
+  // custom - resolved by caller
+  return null;
+}
+function renderReportsTab(){
+  let from, to;
+  if(state.activePeriod === 'custom'){
+    const fEl = document.getElementById('customFrom');
+    const tEl = document.getElementById('customTo');
+    from = fEl.value; to = tEl.value;
+    if(!from || !to || from > to){
+      document.getElementById('repRevenue').textContent = '—';
+      document.getElementById('repCustomers').textContent = '—';
+      document.getElementById('repAverage').textContent = '—';
+      document.getElementById('repStock').textContent = '—';
+      document.getElementById('repStockCount').textContent = '—';
+      document.getElementById('monthlyCompareWrap').classList.add('hidden');
+      return;
+    }
+  } else {
+    const range = getPeriodRange(state.activePeriod);
+    from = range.from; to = range.to;
+  }
+  const sList = salesInRange(from, to);
+  const stats = computeStats(sList);
+  const stList = stockInRange(from, to);
+  const stockTotal = stockSum(stList);
+
+  document.getElementById('repRevenue').textContent = money(stats.revenue);
+  document.getElementById('repCustomers').textContent = stats.customers;
+  document.getElementById('repAverage').textContent = money(stats.average);
+  document.getElementById('repStock').textContent = money(stockTotal);
+  document.getElementById('repStockCount').textContent = stList.length;
+
+  const cmpWrap = document.getElementById('monthlyCompareWrap');
+  if(state.activePeriod === 'monthly'){
+    cmpWrap.classList.remove('hidden');
+    const now = new Date();
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const prevFrom = dateKey(startOfMonth(prevMonthDate));
+    const prevTo = dateKey(endOfMonth(prevMonthDate));
+    const prevStats = computeStats(salesInRange(prevFrom, prevTo));
+    const diff = stats.revenue - prevStats.revenue;
+    let pctText;
+    if(prevStats.revenue === 0){
+      pctText = stats.revenue === 0 ? '0%' : 'N/A';
+    } else {
+      const pct = (diff/prevStats.revenue)*100;
+      pctText = (pct>=0?'+':'') + pct.toFixed(2) + '%';
+    }
+    document.getElementById('cmpThis').textContent = money(stats.revenue);
+    document.getElementById('cmpLast').textContent = money(prevStats.revenue);
+    document.getElementById('cmpDiff').textContent = (diff>=0?'+':'') + money(diff);
+    const pctEl = document.getElementById('cmpPct');
+    pctEl.textContent = pctText;
+    pctEl.className = 'v ' + (diff>=0 ? 'pct-up' : 'pct-down');
+  } else {
+    cmpWrap.classList.add('hidden');
+  }
+}
+
+/* =========================================================
+   7. CALCULATOR
+   ========================================================= */
+function calcReset(){
+  state.calc = { display:'0', expr:'', first:null, operator:null, waitingSecond:false };
+  renderCalc();
+}
+function opSymbolToFn(op, a, b){
+  switch(op){
+    case '+': return a+b;
+    case '−': return a-b;
+    case '×': return a*b;
+    case '÷': return b===0 ? null : a/b;
+  }
+  return b;
+}
+function calcPress(key){
+  const c = state.calc;
+  if(key >= '0' && key <= '9'){
+    if(c.waitingSecond || c.display === 'Error'){
+      c.display = key; c.waitingSecond = false;
+    } else {
+      c.display = (c.display === '0') ? key : c.display + key;
+    }
+  } else if(key === '.'){
+    if(c.waitingSecond || c.display === 'Error'){ c.display = '0.'; c.waitingSecond = false; }
+    else if(c.display.indexOf('.') === -1){ c.display += '.'; }
+  } else if(key === 'clear'){
+    calcReset(); return;
+  } else if(key === 'sign'){
+    if(c.display !== 'Error'){
+      c.display = c.display.startsWith('-') ? c.display.slice(1) : (c.display==='0' ? '0' : '-'+c.display);
+    }
+  } else if(key === 'percent'){
+    if(c.display !== 'Error'){
+      const v = parseFloat(c.display)||0;
+      c.display = String(v/100);
+    }
+  } else if(['+','−','×','÷'].indexOf(key) !== -1){
+    const cur = parseFloat(c.display);
+    if(c.first !== null && c.operator && !c.waitingSecond){
+      const res = opSymbolToFn(c.operator, c.first, cur);
+      if(res === null){ c.display = 'Error'; c.first=null; c.operator=null; c.waitingSecond=true; c.expr=''; renderCalc(); return; }
+      c.first = res; c.display = trimNum(res);
+    } else {
+      c.first = isNaN(cur) ? 0 : cur;
+    }
+    c.operator = key;
+    c.waitingSecond = true;
+    c.expr = trimNum(c.first) + ' ' + key;
+  } else if(key === '='){
+    if(c.operator !== null && c.first !== null){
+      const second = parseFloat(c.display);
+      const res = opSymbolToFn(c.operator, c.first, isNaN(second)?0:second);
+      if(res === null){
+        c.expr = trimNum(c.first)+' '+c.operator+' '+trimNum(second)+' =';
+        c.display = 'Error';
+      } else {
+        c.expr = trimNum(c.first)+' '+c.operator+' '+trimNum(second)+' =';
+        c.display = trimNum(res);
+      }
+      c.first = null; c.operator = null; c.waitingSecond = true;
+    }
+  }
+  renderCalc();
+}
+function trimNum(n){
+  if(n === null || n === undefined || isNaN(n)) return '0';
+  const rounded = Math.round(n*1e8)/1e8;
+  return String(rounded);
+}
+function renderCalc(){
+  document.getElementById('calcExpr').textContent = state.calc.expr || '\u00A0';
+  document.getElementById('calcResult').textContent = state.calc.display;
+}
+
+/* =========================================================
+   8. BACKUP / RESTORE
+   ========================================================= */
+async function backupData(){
+  try{
+    const settingsPayload = {};
+    const storeName = await getSetting('storeName');
+    const storeWebsite = await getSetting('storeWebsite');
+    const paymentUpiId = await getSetting('paymentUpiId');
+    const paymentQrImage = await getSetting('paymentQrImage');
+    if(storeName) settingsPayload.storeName = storeName;
+    if(storeWebsite) settingsPayload.storeWebsite = storeWebsite;
+    if(paymentUpiId) settingsPayload.paymentUpiId = paymentUpiId;
+    if(paymentQrImage) settingsPayload.paymentQrImage = paymentQrImage;
+
+    const payload = {
+      appName: 'Simple Shop Manager',
+      exportedAt: new Date().toISOString(),
+      sales: state.sales,
+      stockPurchases: state.stock,
+      notes: state.notes,
+      customers: state.customers,
+      udhaarEntries: state.udhaarEntries,
+      settings: settingsPayload
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const fname = 'simple-shop-backup-' + dateKey(new Date()) + '.json';
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    toast('Backup downloaded');
+  }catch(err){
+    toast('Backup failed. Please try again.');
+  }
+}
+function validateBackup(obj){
+  if(!obj || typeof obj !== 'object') return false;
+  if(!Array.isArray(obj.sales) || !Array.isArray(obj.stockPurchases) || !Array.isArray(obj.notes)) return false;
+  // customers/udhaarEntries are optional so backups made before the udhaar
+  // feature existed still restore successfully.
+  if(obj.customers !== undefined && !Array.isArray(obj.customers)) return false;
+  if(obj.udhaarEntries !== undefined && !Array.isArray(obj.udhaarEntries)) return false;
+  return true;
+}
+async function restoreFromBackup(obj){
+  await dbClear('sales'); await dbClear('stockPurchases'); await dbClear('notes');
+  await dbClear('customers'); await dbClear('udhaarEntries');
+  state.sales = []; state.stock = []; state.notes = []; state.customers = []; state.udhaarEntries = [];
+  for(const rec of obj.sales){
+    if(rec && rec.id!=null){ await dbAdd('sales', rec); state.sales.push(rec); }
+  }
+  for(const rec of obj.stockPurchases){
+    if(rec && rec.id!=null){ await dbAdd('stockPurchases', rec); state.stock.push(rec); }
+  }
+  for(const rec of obj.notes){
+    if(rec && rec.id!=null){ await dbAdd('notes', rec); state.notes.push(rec); }
+  }
+  const customers = Array.isArray(obj.customers) ? obj.customers : [];
+  const udhaarEntries = Array.isArray(obj.udhaarEntries) ? obj.udhaarEntries : [];
+  for(const rec of customers){
+    if(rec && rec.id!=null){ await dbAdd('customers', rec); state.customers.push(rec); }
+  }
+  for(const rec of udhaarEntries){
+    if(rec && rec.id!=null){ await dbAdd('udhaarEntries', rec); state.udhaarEntries.push(rec); }
+  }
+  // Settings (store name/website, UPI ID, QR image) are upserted rather
+  // than cleared first, so restoring an older backup that predates this
+  // feature never wipes settings already saved on this installation.
+  if(obj.settings && typeof obj.settings === 'object'){
+    for(const k of Object.keys(obj.settings)){
+      await setSetting(k, obj.settings[k]);
+    }
+    await loadStoreDetails();
+  }
+  renderAll();
+  toast('Backup restored successfully.');
+}
+
+/* =========================================================
+   9. UI RENDERING
+   ========================================================= */
+function renderAmountDisplay(){
+  const disp = state.currentAmount === '' ? '0' : state.currentAmount;
+  document.getElementById('amountDisplay').textContent = disp;
+}
+function renderSalesTab(){
+  const list = todaysSales();
+  const stats = computeStats(list);
+  document.getElementById('todayRevenue').textContent = money(stats.revenue);
+  document.getElementById('todayCustomers').textContent = stats.customers;
+  document.getElementById('todayAverage').textContent = money(stats.average);
+}
+function renderTxnList(){
+  const list = todaysSales();
+  const wrap = document.getElementById('txnList');
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="empty-state">No transactions recorded today yet.</div>';
+    return;
+  }
+  let html = '';
+  list.forEach((t, idx) => {
+    const num = list.length - idx;
+    html += '<div class="txn-item">'+
+      '<div class="txn-left"><div class="hash">#'+num+'</div><div class="amt">'+money(t.amount)+'</div></div>'+
+      '<div class="txn-right"><div class="time">'+t.time+'</div>'+
+      '<div class="mini-actions">'+
+        '<button type="button" class="mini-btn" data-edit-sale="'+t.id+'">Edit</button>'+
+        '<button type="button" class="mini-btn danger" data-del-sale="'+t.id+'">Delete</button>'+
+      '</div></div></div>';
+  });
+  wrap.innerHTML = html;
+}
+function renderStockTab(){
+  const now = new Date();
+  const todayR = getPeriodRange('daily');
+  const weekR = getPeriodRange('weekly');
+  const monthR = getPeriodRange('monthly');
+  document.getElementById('stockToday').textContent = money(stockSum(stockInRange(todayR.from, todayR.to)));
+  document.getElementById('stockWeek').textContent = money(stockSum(stockInRange(weekR.from, weekR.to)));
+  document.getElementById('stockMonth').textContent = money(stockSum(stockInRange(monthR.from, monthR.to)));
+  document.getElementById('stockCountAll').textContent = state.stock.length;
+
+  const wrap = document.getElementById('stockList');
+  const sorted = [...state.stock].sort((a,b)=>b.timestamp-a.timestamp);
+  if(sorted.length === 0){
+    wrap.innerHTML = '<div class="empty-state">No stock purchases recorded yet.</div>';
+    return;
+  }
+  let html = '';
+  sorted.forEach(s => {
+    html += '<div class="stock-item">'+
+      '<div class="stock-top"><div class="stock-name">'+escapeHtml(s.product)+'</div><div class="stock-amt">'+money(s.amount)+'</div></div>'+
+      '<div class="stock-meta">'+escapeHtml(String(s.quantity))+'</div>'+
+      '<div class="stock-bottom"><div class="stock-meta">'+fmtDateLabel(s.date)+' • '+s.time+'</div>'+
+      '<div class="mini-actions">'+
+        '<button type="button" class="mini-btn" data-edit-stock="'+s.id+'">Edit</button>'+
+        '<button type="button" class="mini-btn danger" data-del-stock="'+s.id+'">Delete</button>'+
+      '</div></div></div>';
+  });
+  wrap.innerHTML = html;
+}
+function renderNotesTab(){
+  const wrap = document.getElementById('notesList');
+  const sorted = [...state.notes].sort((a,b)=>b.createdAt-a.createdAt);
+  if(sorted.length === 0){
+    wrap.innerHTML = '<div class="empty-state">No notes yet. Add one above.</div>';
+    return;
+  }
+  let html = '';
+  sorted.forEach(n => {
+    const created = new Date(n.createdAt);
+    let reminderBadge = '';
+    if(n.reminderTime){
+      const rd = new Date(n.reminderTime);
+      reminderBadge = '<div class="note-reminder-badge">🔔 '+fmtDateLabel(dateKey(rd))+' • '+timeLabel(rd)+'</div>';
+    }
+    html += '<div class="note-item">'+
+      '<div class="note-title'+(n.done?' done':'')+'">'+escapeHtml(n.title)+'</div>'+
+      (n.details ? '<div class="note-details">'+escapeHtml(n.details)+'</div>' : '')+
+      '<div class="note-meta">Created '+fmtDateLabel(dateKey(created))+' • '+timeLabel(created)+'</div>'+
+      reminderBadge+
+      '<div class="note-actions">'+
+        '<button type="button" class="mini-btn" data-done-note="'+n.id+'">'+(n.done?'Undo':'Done')+'</button>'+
+        '<button type="button" class="mini-btn" data-edit-note="'+n.id+'">Edit</button>'+
+        '<button type="button" class="mini-btn danger" data-del-note="'+n.id+'">Delete</button>'+
+      '</div></div>';
+  });
+  wrap.innerHTML = html;
+}
+// The old in-page reminder banner has been replaced by a centered, blocking
+// popup (#reminderLockOverlay). This function now finds due reminders and
+// shows them one at a time as a blocking popup instead of writing into the
+// (now unused/empty) #reminderBanner element.
+let activeReminderNoteId = null;
+
+function dueReminders(){
+  const now = Date.now();
+  return state.notes
+    .filter(n => n.reminderTime && !n.done && n.reminderTime <= now && (!n.snoozedUntil || n.snoozedUntil <= now))
+    .sort((a,b)=> a.reminderTime - b.reminderTime);
+}
+
+function renderReminderBanner(){
+  const wrap = document.getElementById('reminderBanner');
+  if(wrap) wrap.innerHTML = ''; // legacy container, kept empty/unused
+  const due = dueReminders();
+
+  if(due.length === 0){
+    if(activeReminderNoteId){
+      activeReminderNoteId = null;
+      closeReminderPopup();
+    }
+    return;
+  }
+
+  // A popup is already showing for a note that's still due - don't touch it,
+  // so we don't re-vibrate or flicker every 15-second check.
+  if(activeReminderNoteId && due.some(n => n.id === activeReminderNoteId)) return;
+
+  showReminderPopup(due[0]);
+}
+
+function showReminderPopup(note){
+  activeReminderNoteId = note.id;
+  document.getElementById('reminderPopupTitle').textContent = note.title;
+  const detailsEl = document.getElementById('reminderPopupDetails');
+  detailsEl.textContent = note.details || '';
+  detailsEl.classList.toggle('hidden', !note.details);
+  document.getElementById('reminderDoneBtn').setAttribute('data-rem-done', note.id);
+  document.querySelectorAll('#reminderLockOverlay [data-rem-snooze]').forEach(btn=>{
+    btn.setAttribute('data-rem-snooze', note.id);
+  });
+  document.getElementById('reminderLockOverlay').classList.remove('hidden');
+  if('vibrate' in navigator){
+    try{ navigator.vibrate([300, 150, 300]); }catch(e){ /* ignore unsupported devices */ }
+  }
+}
+
+function closeReminderPopup(){
+  document.getElementById('reminderLockOverlay').classList.add('hidden');
+}
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function renderUdhaarTab(){
+  document.getElementById('udhaarTotalOutstanding').textContent = money(totalOutstandingUdhaar());
+  document.getElementById('udhaarCustomerCount').textContent = state.customers.length + ' customer' + (state.customers.length===1?'':'s');
+  const wrap = document.getElementById('customerList');
+  const sorted = [...state.customers].sort((a,b)=> a.name.localeCompare(b.name));
+  if(sorted.length === 0){
+    wrap.innerHTML = '<div class="empty-state">No customers yet. Add one to start tracking udhaar.</div>';
+    return;
+  }
+  let html = '';
+  sorted.forEach(c=>{
+    const bal = customerBalance(c.id);
+    const balClass = bal > 0 ? 'owed' : 'zero';
+    html += '<div class="txn-item customer-item" data-open-customer="'+c.id+'">'+
+      '<div class="customer-left"><div class="cname">'+escapeHtml(c.name)+'</div>'+
+      (c.phone ? '<div class="cphone">'+escapeHtml(c.phone)+'</div>' : '')+'</div>'+
+      '<div class="customer-right"><div class="cbal '+balClass+'">'+money(bal)+'</div>'+
+      '<div class="clabel">'+(bal>0?'owed to you':'settled')+'</div></div></div>';
+  });
+  wrap.innerHTML = html;
+}
+function renderCustomerDetail(){
+  const c = state.customers.find(x=>x.id===state.activeCustomerId);
+  if(!c) return;
+  document.getElementById('customerDetailName').textContent = c.name;
+  const bal = customerBalance(c.id);
+  document.getElementById('customerDetailBalance').textContent = money(bal);
+  const waBtn = document.getElementById('whatsappRemindBtn');
+  if(c.phone && bal > 0){
+    waBtn.classList.remove('hidden');
+  } else {
+    waBtn.classList.add('hidden');
+  }
+  const entries = customerEntries(c.id);
+  const wrap = document.getElementById('customerEntryList');
+  if(entries.length === 0){
+    wrap.innerHTML = '<div class="empty-state">No transactions yet.</div>';
+    return;
+  }
+  let html = '';
+  entries.forEach(e=>{
+    const sign = e.type === 'credit' ? '+' : '−';
+    html += '<div class="entry-row">'+
+      '<div class="entry-left"><div class="etype '+e.type+'">'+(e.type==='credit'?'Credit given':'Payment received')+'</div>'+
+      '<div class="etime">'+fmtDateLabel(e.date)+' • '+e.time+(e.note?' • '+escapeHtml(e.note):'')+'</div></div>'+
+      '<div class="entry-right" style="display:flex;align-items:center;">'+
+      '<span class="eamt">'+sign+money(e.amount)+'</span>'+
+      '<button type="button" class="mini-btn danger entry-del" data-del-entry="'+e.id+'">✕</button>'+
+      '</div></div>';
+  });
+  wrap.innerHTML = html;
+}
+function renderAll(){
+  renderSalesTab();
+  renderAmountDisplay();
+  renderReportsTab();
+  renderStockTab();
+  renderNotesTab();
+  renderUdhaarTab();
+  renderReminderBanner();
+}
+
+/* Tab switching */
+function switchTab(tab){
+  state.activeTab = tab;
+  ['sales','reports','stock','notes','udhaar'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+  });
+  document.querySelectorAll('.navbtn').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-tab')===tab);
+  });
+  if(tab==='reports') renderReportsTab();
+  if(tab==='stock') renderStockTab();
+  if(tab==='notes') renderNotesTab();
+  if(tab==='udhaar') renderUdhaarTab();
+}
+function switchPeriod(period){
+  state.activePeriod = period;
+  document.querySelectorAll('#periodTabs button').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-period')===period);
+  });
+  const isCustom = period === 'custom';
+  document.getElementById('customDateRow').classList.toggle('hidden', !isCustom);
+  document.getElementById('customShowBtn').classList.toggle('hidden', !isCustom);
+  if(isCustom){
+    const fEl = document.getElementById('customFrom');
+    const tEl = document.getElementById('customTo');
+    if(!fEl.value){ fEl.value = dateKey(new Date()); }
+    if(!tEl.value){ tEl.value = dateKey(new Date()); }
+  }
+  renderReportsTab();
+}
+
+/* Modal helpers */
+function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+function showConfirm(title, message, onConfirm){
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  state.confirmCallback = onConfirm;
+  openModal('confirmModal');
+}
+
+/* =========================================================
+   10. EVENT LISTENERS
+   ========================================================= */
+function initEvents(){
+
+  // Bottom nav
+  document.querySelectorAll('.navbtn').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchTab(btn.getAttribute('data-tab')));
+  });
+
+  // Numpad (event delegation)
+  document.getElementById('numpad').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-key]');
+    if(!btn) return;
+    const key = btn.getAttribute('data-key');
+    if(key === 'C'){ state.currentAmount = ''; }
+    else if(key === 'back'){ state.currentAmount = state.currentAmount.slice(0,-1); }
+    else {
+      if(state.currentAmount.length >= 9) return;
+      if(state.currentAmount === '0') state.currentAmount = key;
+      else state.currentAmount += key;
+    }
+    renderAmountDisplay();
+  });
+
+  // OK button - record sale
+  document.getElementById('okBtn').addEventListener('click', async ()=>{
+    if(state.okLocked) return;
+    const amt = parseFloat(state.currentAmount);
+    if(!state.currentAmount || isNaN(amt) || amt <= 0){
+      toast('Enter an amount greater than 0');
+      return;
+    }
+    state.okLocked = true;
+    const okBtn = document.getElementById('okBtn');
+    okBtn.disabled = true;
+    try{
+      await addSale(amt);
+      state.currentAmount = '';
+      renderAmountDisplay();
+      renderSalesTab();
+      const flash = document.getElementById('recordedFlash');
+      flash.classList.add('show');
+      setTimeout(()=>flash.classList.remove('show'), 650);
+    }catch(err){
+      toast('Could not save sale. Please try again.');
+    }finally{
+      setTimeout(()=>{ state.okLocked=false; okBtn.disabled=false; }, 550);
+    }
+  });
+
+  // View transactions
+  document.getElementById('viewTxnBtn').addEventListener('click', ()=>{
+    renderTxnList();
+    openModal('txnModal');
+  });
+
+  // Adjust previous customer
+  document.getElementById('adjustPrevBtn').addEventListener('click', ()=>{
+    const list = todaysSales();
+    if(list.length === 0){ toast('No sales recorded today yet.'); return; }
+    const latest = list[0];
+    state.editingSaleId = latest.id;
+    document.getElementById('editSaleTitle').textContent = 'Adjust Previous Customer';
+    document.getElementById('editSaleAmount').value = latest.amount;
+    openModal('editSaleModal');
+  });
+
+  // Transaction list actions (delegation)
+  document.getElementById('txnList').addEventListener('click', (e)=>{
+    const editBtn = e.target.closest('[data-edit-sale]');
+    const delBtn = e.target.closest('[data-del-sale]');
+    if(editBtn){
+      const id = editBtn.getAttribute('data-edit-sale');
+      const rec = state.sales.find(s=>s.id===id);
+      if(!rec) return;
+      state.editingSaleId = id;
+      document.getElementById('editSaleTitle').textContent = 'Edit Sale';
+      document.getElementById('editSaleAmount').value = rec.amount;
+      openModal('editSaleModal');
+    } else if(delBtn){
+      const id = delBtn.getAttribute('data-del-sale');
+      showConfirm('Delete transaction?', 'This transaction will be permanently removed.', async ()=>{
+        try{
+          await deleteSale(id);
+          renderTxnList();
+          renderSalesTab();
+          renderReportsTab();
+          toast('Transaction deleted');
+        }catch(err){ toast('Could not delete. Try again.'); }
+      });
+    }
+  });
+
+  // Save edited/adjusted sale
+  document.getElementById('saveEditSaleBtn').addEventListener('click', async ()=>{
+    const val = parseFloat(document.getElementById('editSaleAmount').value);
+    if(isNaN(val) || val <= 0){ toast('Enter a valid amount'); return; }
+    try{
+      await updateSaleAmount(state.editingSaleId, val);
+      closeModal('editSaleModal');
+      renderSalesTab();
+      renderTxnList();
+      renderReportsTab();
+      toast('Sale updated');
+    }catch(err){ toast('Could not update sale.'); }
+  });
+
+  // Calculator open/close
+  document.getElementById('openCalcBtn').addEventListener('click', ()=>{
+    calcReset();
+    openModal('calcModal');
+  });
+  document.getElementById('calcGrid').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-c]');
+    if(!btn) return;
+    calcPress(btn.getAttribute('data-c'));
+  });
+
+  // Generic modal close buttons
+  document.querySelectorAll('[data-close]').forEach(btn=>{
+    btn.addEventListener('click', ()=> closeModal(btn.getAttribute('data-close')));
+  });
+  document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click', (e)=>{
+      if(e.target === ov) ov.classList.add('hidden');
+    });
+  });
+
+  // Settings modal
+  document.getElementById('settingsBtn').addEventListener('click', ()=> openModal('settingsModal'));
+  document.getElementById('backupBtn').addEventListener('click', backupData);
+  document.getElementById('restoreBtn').addEventListener('click', ()=>{
+    document.getElementById('restoreFileInput').click();
+  });
+
+  // Store name (header) — click to open the store website; save via Settings
+  document.getElementById('storeNameBtn').addEventListener('click', handleStoreNameClick);
+  document.getElementById('saveStoreDetailsBtn').addEventListener('click', saveStoreDetails);
+
+  // Payment QR
+  document.getElementById('paymentQrBtn').addEventListener('click', async ()=>{
+    await loadPaymentQr();
+    openModal('paymentQrModal');
+  });
+  document.getElementById('editPaymentQrBtn').addEventListener('click', async ()=>{
+    resetPaymentQrForm();
+    const upiId = await getSetting('paymentUpiId');
+    document.getElementById('upiIdInput').value = upiId || '';
+    document.getElementById('paymentQrDisplay').classList.add('hidden');
+    document.getElementById('paymentQrForm').classList.remove('hidden');
+  });
+  document.getElementById('cancelPaymentQrBtn').addEventListener('click', ()=>{
+    resetPaymentQrForm();
+    closeModal('paymentQrModal');
+  });
+  document.getElementById('chooseQrFileBtn').addEventListener('click', ()=>{
+    document.getElementById('qrFileInput').click();
+  });
+  document.getElementById('qrFileInput').addEventListener('change', (e)=>{
+    handleQrFileChosen(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('savePaymentQrBtn').addEventListener('click', handleSavePaymentQr);
+  document.getElementById('copyUpiBtn').addEventListener('click', handleCopyUpi);
+  document.getElementById('shareQrBtn').addEventListener('click', handleShareQr);
+  document.getElementById('restoreFileInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt)=>{
+      let parsed;
+      try{ parsed = JSON.parse(evt.target.result); }
+      catch(err){ toast('Invalid backup file.'); e.target.value=''; return; }
+      if(!validateBackup(parsed)){ toast('Invalid backup file.'); e.target.value=''; return; }
+      showConfirm('Restore backup?', 'This will replace the current saved data. Continue?', async ()=>{
+        try{
+          await restoreFromBackup(parsed);
+          closeModal('settingsModal');
+        }catch(err){ toast('Restore failed. Please try again.'); }
+      });
+      e.target.value = '';
+    };
+    reader.onerror = ()=>{ toast('Could not read file.'); };
+    reader.readAsText(file);
+  });
+
+  // Confirm modal
+  document.getElementById('confirmCancelBtn').addEventListener('click', ()=> closeModal('confirmModal'));
+  document.getElementById('confirmOkBtn').addEventListener('click', async ()=>{
+    const cb = state.confirmCallback;
+    closeModal('confirmModal');
+    state.confirmCallback = null;
+    if(cb) await cb();
+  });
+
+  // Period tabs
+  document.getElementById('periodTabs').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-period]');
+    if(!btn) return;
+    switchPeriod(btn.getAttribute('data-period'));
+  });
+  document.getElementById('customShowBtn').addEventListener('click', renderReportsTab);
+  document.getElementById('customFrom').addEventListener('change', ()=>{ if(state.activePeriod==='custom') renderReportsTab(); });
+  document.getElementById('customTo').addEventListener('change', ()=>{ if(state.activePeriod==='custom') renderReportsTab(); });
+
+  // Stock: add
+  document.getElementById('addStockBtn').addEventListener('click', ()=>{
+    state.editingStockId = null;
+    document.getElementById('stockFormTitle').textContent = 'Add Stock Purchase';
+    document.getElementById('stockName').value = '';
+    document.getElementById('stockQty').value = '';
+    document.getElementById('stockAmount').value = '';
+    const now = new Date();
+    document.getElementById('stockDate').value = dateKey(now);
+    document.getElementById('stockTime').value = pad2(now.getHours())+':'+pad2(now.getMinutes());
+    openModal('stockFormModal');
+  });
+  document.getElementById('saveStockBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('stockName').value.trim();
+    const qty = document.getElementById('stockQty').value.trim();
+    const amt = parseFloat(document.getElementById('stockAmount').value);
+    const dVal = document.getElementById('stockDate').value;
+    const tVal = document.getElementById('stockTime').value;
+    if(!name){ toast('Enter a product name'); return; }
+    if(!qty){ toast('Enter a quantity'); return; }
+    if(isNaN(amt) || amt <= 0){ toast('Enter a valid amount'); return; }
+    let dateObj;
+    if(dVal && tVal){
+      const [y,m,d] = dVal.split('-').map(Number);
+      const [hh,mm] = tVal.split(':').map(Number);
+      dateObj = new Date(y, m-1, d, hh, mm);
+    } else {
+      dateObj = new Date();
+    }
+    if(isNaN(dateObj.getTime())){ toast('Invalid date/time'); return; }
+    try{
+      if(state.editingStockId){
+        await updateStock(state.editingStockId, name, qty, amt, dateObj);
+        toast('Stock purchase updated');
+      } else {
+        await addStock(name, qty, amt, dateObj);
+        toast('Stock purchase recorded');
+      }
+      closeModal('stockFormModal');
+      renderStockTab();
+      renderReportsTab();
+    }catch(err){ toast('Could not save stock purchase.'); }
+  });
+  document.getElementById('stockList').addEventListener('click', (e)=>{
+    const editBtn = e.target.closest('[data-edit-stock]');
+    const delBtn = e.target.closest('[data-del-stock]');
+    if(editBtn){
+      const id = editBtn.getAttribute('data-edit-stock');
+      const rec = state.stock.find(s=>s.id===id);
+      if(!rec) return;
+      state.editingStockId = id;
+      document.getElementById('stockFormTitle').textContent = 'Edit Stock Purchase';
+      document.getElementById('stockName').value = rec.product;
+      document.getElementById('stockQty').value = rec.quantity;
+      document.getElementById('stockAmount').value = rec.amount;
+      document.getElementById('stockDate').value = rec.date;
+      const dt = new Date(rec.timestamp);
+      document.getElementById('stockTime').value = pad2(dt.getHours())+':'+pad2(dt.getMinutes());
+      openModal('stockFormModal');
+    } else if(delBtn){
+      const id = delBtn.getAttribute('data-del-stock');
+      showConfirm('Delete stock purchase?', 'This record will be permanently removed.', async ()=>{
+        try{
+          await deleteStock(id);
+          renderStockTab();
+          renderReportsTab();
+          toast('Stock purchase deleted');
+        }catch(err){ toast('Could not delete. Try again.'); }
+      });
+    }
+  });
+
+  // Notes: add
+  document.getElementById('addNoteBtn').addEventListener('click', ()=>{
+    state.editingNoteId = null;
+    document.getElementById('noteFormTitle').textContent = 'Add Note';
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteDetails').value = '';
+    document.getElementById('noteReminderCheck').checked = false;
+    document.getElementById('noteReminderFields').classList.add('hidden');
+    document.getElementById('noteRemDate').value = '';
+    document.getElementById('noteRemTime').value = '';
+    openModal('noteFormModal');
+  });
+  document.getElementById('noteReminderCheck').addEventListener('change', (e)=>{
+    document.getElementById('noteReminderFields').classList.toggle('hidden', !e.target.checked);
+    if(e.target.checked){
+      const now = new Date();
+      if(!document.getElementById('noteRemDate').value) document.getElementById('noteRemDate').value = dateKey(now);
+      if(!document.getElementById('noteRemTime').value) document.getElementById('noteRemTime').value = pad2(now.getHours())+':'+pad2(now.getMinutes());
+    }
+  });
+  document.getElementById('saveNoteBtn').addEventListener('click', async ()=>{
+    const title = document.getElementById('noteTitle').value.trim();
+    const details = document.getElementById('noteDetails').value.trim();
+    const wantsReminder = document.getElementById('noteReminderCheck').checked;
+    if(!title){ toast('Enter a note title'); return; }
+    let reminderTime = null;
+    if(wantsReminder){
+      const dVal = document.getElementById('noteRemDate').value;
+      const tVal = document.getElementById('noteRemTime').value;
+      if(!dVal || !tVal){ toast('Enter a reminder date and time'); return; }
+      const [y,m,d] = dVal.split('-').map(Number);
+      const [hh,mm] = tVal.split(':').map(Number);
+      const dt = new Date(y, m-1, d, hh, mm);
+      if(isNaN(dt.getTime())){ toast('Invalid reminder date/time'); return; }
+      reminderTime = dt.getTime();
+    }
+    try{
+      if(state.editingNoteId){
+        await updateNote(state.editingNoteId, title, details, reminderTime);
+        toast('Note updated');
+      } else {
+        await addNote(title, details, reminderTime);
+        toast('Note saved');
+      }
+      closeModal('noteFormModal');
+      renderNotesTab();
+      renderReminderBanner();
+    }catch(err){ toast('Could not save note.'); }
+  });
+  document.getElementById('notesList').addEventListener('click', async (e)=>{
+    const doneBtn = e.target.closest('[data-done-note]');
+    const editBtn = e.target.closest('[data-edit-note]');
+    const delBtn = e.target.closest('[data-del-note]');
+    if(doneBtn){
+      const id = doneBtn.getAttribute('data-done-note');
+      try{ await toggleNoteDone(id); renderNotesTab(); renderReminderBanner(); }
+      catch(err){ toast('Could not update note.'); }
+    } else if(editBtn){
+      const id = editBtn.getAttribute('data-edit-note');
+      const rec = state.notes.find(n=>n.id===id);
+      if(!rec) return;
+      state.editingNoteId = id;
+      document.getElementById('noteFormTitle').textContent = 'Edit Note';
+      document.getElementById('noteTitle').value = rec.title;
+      document.getElementById('noteDetails').value = rec.details || '';
+      const hasRem = !!rec.reminderTime;
+      document.getElementById('noteReminderCheck').checked = hasRem;
+      document.getElementById('noteReminderFields').classList.toggle('hidden', !hasRem);
+      if(hasRem){
+        const dt = new Date(rec.reminderTime);
+        document.getElementById('noteRemDate').value = dateKey(dt);
+        document.getElementById('noteRemTime').value = pad2(dt.getHours())+':'+pad2(dt.getMinutes());
+      } else {
+        document.getElementById('noteRemDate').value = '';
+        document.getElementById('noteRemTime').value = '';
+      }
+      openModal('noteFormModal');
+    } else if(delBtn){
+      const id = delBtn.getAttribute('data-del-note');
+      showConfirm('Delete note?', 'This note will be permanently removed.', async ()=>{
+        try{ await deleteNote(id); renderNotesTab(); renderReminderBanner(); toast('Note deleted'); }
+        catch(err){ toast('Could not delete. Try again.'); }
+      });
+    }
+  });
+
+  // Reminder banner actions (delegation) - legacy container, kept empty now
+  // but the listener is harmless to leave in place.
+  document.getElementById('reminderBanner').addEventListener('click', async (e)=>{
+    const doneBtn = e.target.closest('[data-rem-done]');
+    const snoozeBtn = e.target.closest('[data-rem-snooze]');
+    if(doneBtn){
+      const id = doneBtn.getAttribute('data-rem-done');
+      try{ await toggleNoteDone(id); renderReminderBanner(); renderNotesTab(); }
+      catch(err){ toast('Could not update reminder.'); }
+    } else if(snoozeBtn){
+      const id = snoozeBtn.getAttribute('data-rem-snooze');
+      const mins = parseInt(snoozeBtn.getAttribute('data-mins'),10);
+      try{ await snoozeNote(id, mins); }
+      catch(err){ toast('Could not snooze reminder.'); }
+    }
+  });
+
+  // Blocking reminder popup actions - only one popup at a time, no backdrop
+  // or Escape dismissal; the app stays locked until Done/snooze is chosen.
+  document.getElementById('reminderLockOverlay').addEventListener('click', async (e)=>{
+    const doneBtn = e.target.closest('[data-rem-done]');
+    const snoozeBtn = e.target.closest('[data-rem-snooze]');
+    if(doneBtn){
+      const id = doneBtn.getAttribute('data-rem-done');
+      if(!id) return;
+      try{ await toggleNoteDone(id); }
+      catch(err){ toast('Could not update reminder.'); }
+      activeReminderNoteId = null;
+      closeReminderPopup();
+      renderNotesTab();
+      renderReminderBanner();
+    } else if(snoozeBtn){
+      const id = snoozeBtn.getAttribute('data-rem-snooze');
+      if(!id) return;
+      const mins = parseInt(snoozeBtn.getAttribute('data-mins'),10);
+      activeReminderNoteId = null;
+      closeReminderPopup();
+      try{ await snoozeNote(id, mins); }
+      catch(err){ toast('Could not snooze reminder.'); }
+    }
+  });
+
+  // Activation screen
+  document.getElementById('activateBtn').addEventListener('click', handleActivateClick);
+  document.getElementById('activationCodeInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') handleActivateClick();
+  });
+
+  // ---- Udhaar (credit tracking) ----
+
+  // Add customer
+  document.getElementById('addCustomerBtn').addEventListener('click', ()=>{
+    state.editingCustomerId = null;
+    document.getElementById('customerFormTitle').textContent = 'Add Customer';
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerPhone').value = '';
+    openModal('customerFormModal');
+  });
+  document.getElementById('saveCustomerBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+    if(!name){ toast('Enter a customer name'); return; }
+    try{
+      if(state.editingCustomerId){
+        await updateCustomer(state.editingCustomerId, name, phone);
+        toast('Customer updated');
+      } else {
+        await addCustomer(name, phone);
+        toast('Customer added');
+      }
+      closeModal('customerFormModal');
+      renderUdhaarTab();
+      if(state.activeCustomerId) renderCustomerDetail();
+    }catch(err){ toast('Could not save customer.'); }
+  });
+
+  // Open customer detail (delegation on the list)
+  document.getElementById('customerList').addEventListener('click', (e)=>{
+    const item = e.target.closest('[data-open-customer]');
+    if(!item) return;
+    state.activeCustomerId = item.getAttribute('data-open-customer');
+    renderCustomerDetail();
+    openModal('customerDetailModal');
+  });
+
+  // Add credit / record payment (open the shared entry modal)
+  document.getElementById('addCreditBtn').addEventListener('click', ()=>{
+    state.udhaarEntryMode = 'credit';
+    document.getElementById('udhaarEntryTitle').textContent = 'Add Credit (Udhaar)';
+    document.getElementById('udhaarEntryAmount').value = '';
+    document.getElementById('udhaarEntryNote').value = '';
+    openModal('udhaarEntryModal');
+  });
+  document.getElementById('addPaymentBtn').addEventListener('click', ()=>{
+    state.udhaarEntryMode = 'payment';
+    document.getElementById('udhaarEntryTitle').textContent = 'Record Payment';
+    document.getElementById('udhaarEntryAmount').value = '';
+    document.getElementById('udhaarEntryNote').value = '';
+    openModal('udhaarEntryModal');
+  });
+  document.getElementById('saveUdhaarEntryBtn').addEventListener('click', async ()=>{
+    const amt = parseFloat(document.getElementById('udhaarEntryAmount').value);
+    const note = document.getElementById('udhaarEntryNote').value.trim();
+    if(isNaN(amt) || amt <= 0){ toast('Enter a valid amount'); return; }
+    if(!state.activeCustomerId){ toast('No customer selected'); return; }
+    try{
+      await addUdhaarEntry(state.activeCustomerId, state.udhaarEntryMode, amt, note);
+      closeModal('udhaarEntryModal');
+      renderCustomerDetail();
+      renderUdhaarTab();
+      toast(state.udhaarEntryMode==='credit' ? 'Credit added' : 'Payment recorded');
+    }catch(err){ toast('Could not save entry.'); }
+  });
+
+  // Delete a single udhaar entry (delegation inside the detail modal)
+  document.getElementById('customerEntryList').addEventListener('click', (e)=>{
+    const delBtn = e.target.closest('[data-del-entry]');
+    if(!delBtn) return;
+    const id = delBtn.getAttribute('data-del-entry');
+    showConfirm('Delete this entry?', 'This transaction will be permanently removed from the customer\'s history.', async ()=>{
+      try{
+        await deleteUdhaarEntry(id);
+        renderCustomerDetail();
+        renderUdhaarTab();
+        toast('Entry deleted');
+      }catch(err){ toast('Could not delete. Try again.'); }
+    });
+  });
+
+  // WhatsApp reminder (opens WhatsApp with a pre-filled message; requires the device to have WhatsApp / internet)
+  document.getElementById('whatsappRemindBtn').addEventListener('click', ()=>{
+    const c = state.customers.find(x=>x.id===state.activeCustomerId);
+    if(!c || !c.phone) return;
+    const bal = customerBalance(c.id);
+    const digits = normalizePhoneForWhatsApp(c.phone);
+    const msg = 'Hi '+c.name+', your pending balance is '+money(bal)+'. Please pay at your convenience. Thank you!';
+    const url = 'https://wa.me/'+digits+'?text='+encodeURIComponent(msg);
+    window.open(url, '_blank');
+  });
+
+  // Edit / delete the currently open customer
+  document.getElementById('editCustomerBtn').addEventListener('click', ()=>{
+    const c = state.customers.find(x=>x.id===state.activeCustomerId);
+    if(!c) return;
+    state.editingCustomerId = c.id;
+    document.getElementById('customerFormTitle').textContent = 'Edit Customer';
+    document.getElementById('customerName').value = c.name;
+    document.getElementById('customerPhone').value = c.phone || '';
+    openModal('customerFormModal');
+  });
+  document.getElementById('deleteCustomerBtn').addEventListener('click', ()=>{
+    const c = state.customers.find(x=>x.id===state.activeCustomerId);
+    if(!c) return;
+    showConfirm('Delete customer?', 'This will remove '+c.name+' and their entire udhaar history. This cannot be undone.', async ()=>{
+      try{
+        await deleteCustomer(c.id);
+        state.activeCustomerId = null;
+        closeModal('customerDetailModal');
+        renderUdhaarTab();
+        toast('Customer deleted');
+      }catch(err){ toast('Could not delete customer.'); }
+    });
+  });
+}
+
+/* =========================================================
+   11. INITIALIZATION
+   ========================================================= */
+async function init(){
+  try{
+    await openDB();
+    const [sales, stock, notes, customers, udhaarEntries] = await Promise.all([
+      dbGetAll('sales'), dbGetAll('stockPurchases'), dbGetAll('notes'),
+      dbGetAll('customers'), dbGetAll('udhaarEntries')
+    ]);
+    state.sales = sales || [];
+    state.stock = stock || [];
+    state.notes = notes || [];
+    state.customers = customers || [];
+    state.udhaarEntries = udhaarEntries || [];
+    await loadStoreDetails();
+  }catch(err){
+    toast('Storage unavailable. Some features may not work.');
+  }
+  initEvents();
+  renderAll();
+  switchTab('sales');
+  // Periodic reminder check
+  setInterval(renderReminderBanner, 15000);
+  // Authorization gate - shows the activation screen until a valid license
+  // is confirmed. Runs after the app UI is wired up/rendered underneath it.
+  try{ await initAuth(); }
+  catch(err){ showActivationScreen(); }
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+})();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .catch(err => console.log('Service worker registration failed:', err));
+    });
+  }
+  
+</script>
+</body>
+</html>
